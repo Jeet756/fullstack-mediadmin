@@ -8,6 +8,8 @@ function AdminDashboard() {
   const [showPosterSection, setShowPosterSection] = useState(false);
   const token = localStorage.getItem("token");
 
+  const API = "https://fullstack-mediadmin.onrender.com";
+
   const uploadPoster = async (index, file) => {
     if (!file) return;
 
@@ -15,7 +17,7 @@ function AdminDashboard() {
     formData.append("poster", file);
 
     const res = await fetch(
-      `http://localhost:5000/api/upload-poster/${index}`,
+      `${API}/api/upload-poster/${index}`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -28,7 +30,7 @@ function AdminDashboard() {
   };
 
   const fetchApplications = async () => {
-    const res = await fetch("http://localhost:5000/api/applications", {
+    const res = await fetch(`${API}/api/applications`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -46,7 +48,7 @@ function AdminDashboard() {
   };
 
   const fetchAppointments = async () => {
-    const res = await fetch("http://localhost:5000/api/appointments", {
+    const res = await fetch(`${API}/api/appointments`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -68,7 +70,7 @@ function AdminDashboard() {
       return;
 
     const res = await fetch(
-      `http://localhost:5000/api/applications/${index}`,
+      `${API}/api/applications/${index}`,
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -91,7 +93,7 @@ function AdminDashboard() {
       return;
 
     const res = await fetch(
-      `http://localhost:5000/api/appointments/${index}`,
+      `${API}/api/appointments/${index}`,
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -236,86 +238,6 @@ function AdminDashboard() {
             ))}
           </div>
         </>
-      )}
-
-      {showApps && (
-        <div style={{ marginTop: "30px" }}>
-          <h2 style={{ fontSize: "clamp(18px, 5vw, 24px)" }}>Applications</h2>
-
-          {applications.map((app, index) => (
-            <div key={index} style={cardStyle}>
-              <p><strong>Name:</strong> {app.firstName} {app.lastName}</p>
-              <p><strong>Email:</strong> {app.email}</p>
-              <p><strong>Phone:</strong> {app.phone}</p>
-              <p><strong>Address:</strong> {app.address}</p>
-              <p><strong>Date of Birth:</strong> {app.dob}</p>
-              <p><strong>Position:</strong> {app.position}</p>
-              <p><strong>Qualification:</strong> {app.qualification}</p>
-              <p><strong>Experience:</strong> {app.experience} years</p>
-              <p><strong>License:</strong> {app.license}</p>
-
-              <button
-                onClick={() => deleteApplication(app.id)}
-                style={{
-                  marginTop: "8px",
-                  padding: "6px 12px",
-                  backgroundColor: "darkred",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontSize: "clamp(10px, 3vw, 12px)",
-                }}
-              >
-                Delete Application
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showAppointments && (
-        <div style={{ marginTop: "30px" }}>
-          <h2 style={{ fontSize: "clamp(18px, 5vw, 24px)" }}>Appointments</h2>
-
-          {appointments.map((appt, index) => (
-            <div
-              key={index}
-              style={{
-                ...cardStyle,
-                border: "1px solid green",
-                backgroundColor: "#eef9f1",
-              }}
-            >
-              <p><strong>Name:</strong> {appt.name}</p>
-              <p><strong>Email:</strong> {appt.email}</p>
-              <p><strong>Phone:</strong> {appt.phone}</p>
-              <p><strong>Age:</strong> {appt.age}</p>
-              <p><strong>Gender:</strong> {appt.gender}</p>
-              <p><strong>Symptoms:</strong> {appt.symptoms}</p>
-              <p><strong>Appointment Date:</strong> {appt.appointmentDate}</p>
-              <p><strong>Doctor / Priority:</strong> {appt.doctorPriority}</p>
-              <p>
-                <strong>Created At:</strong>{" "}
-                {new Date(appt.createdAt).toLocaleString()}
-              </p>
-
-              <button
-                onClick={() => deleteAppointment(appt.id)}
-                style={{
-                  marginTop: "8px",
-                  padding: "6px 12px",
-                  backgroundColor: "darkred",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontSize: "clamp(10px, 3vw, 12px)",
-                }}
-              >
-                Delete Appointment
-              </button>
-            </div>
-          ))}
-        </div>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ function Register() {
 
     const token = localStorage.getItem("token");
 
-await fetch("http://localhost:5000/api/register", {
+await fetch("https://fullstack-mediadmin.onrender.com/api/register", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
