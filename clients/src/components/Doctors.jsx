@@ -1,45 +1,37 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-
 const Doctors = () => {
-  const API = "https://fullstack-mediadmin.onrender.com";
   const [doctors, setDoctors] = useState([]);
   const [width, setWidth] = useState(window.innerWidth);
   const [loading, setLoading] = useState(true);
 const [search, setSearch] = useState("");
 const filteredDoctors = doctors.filter((doc) => {
   const searchText = search.toLowerCase().trim();
-
   const name = doc.name
     .toLowerCase()
     .replace("dr.", "")
     .replace("dr ", "")
     .trim();
-
   return name.includes(searchText);
 });
-  useEffect(() => {
-    fetch(`${API}/api/doctors`)
-      .then((res) => res.json())
-      .then((data) => {
-        data.sort((a, b) => a.order_index - b.order_index);
-        setDoctors(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+useEffect(() => {
+  const JSON_URL = "https://raw.githubusercontent.com/jeet756/mediadmin-data/main/doctors.json?v=" + Date.now();
+  fetch(JSON_URL)
+    .then((res) => res.json())
+    .then((data) => {
+      setDoctors(data);
+      setLoading(false);
+    })
+    .catch(() => setLoading(false));
+}, []);
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const isUltraSmall = width <= 245;
-
   const dynamicPadding =
     width <= 200 ? "15px" : width <= 350 ? "20px" : "30px";
-
   return (
     <div style={styles.wrapper}>
       <Helmet>
@@ -49,8 +41,6 @@ const filteredDoctors = doctors.filter((doc) => {
           content="Meet our experienced doctors including gynecologists, surgeons, physicians, and specialists dedicated to quality healthcare."
         />
       </Helmet>
-
-      {/* HERO */}
       <section
         style={{
           ...styles.hero,
@@ -65,7 +55,6 @@ const filteredDoctors = doctors.filter((doc) => {
         >
           Meet Our Expert Medical Staff
         </h1>
-
         <p
           style={{
             ...styles.heroSubtitle,
@@ -93,7 +82,6 @@ const filteredDoctors = doctors.filter((doc) => {
     }}
   />
 </div>
-      {/* SECTION */}
       <section style={styles.section}>
         {loading ? (
           <h2 style={{ textAlign: "center" }}>Loading...</h2>
@@ -138,7 +126,6 @@ const filteredDoctors = doctors.filter((doc) => {
           </div>
         )}
       </div>
-
       <h3 style={styles.name}>{doc.name}</h3>
       <p style={styles.degree}>{doc.degree}</p>
       <p style={styles.desc}>{doc.description}</p>
@@ -151,7 +138,6 @@ const filteredDoctors = doctors.filter((doc) => {
     </div>
   );
 };
-
 const styles = {
   noImage: {
   width: "110px",
@@ -161,8 +147,8 @@ const styles = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  textAlign: "center", // 👈 add this
-  padding: "5px",      // 👈 add this
+  textAlign: "center", 
+  padding: "5px",      
   fontSize: "11px",
   color: "#475569",
   border: "4px solid #3b82f6",
@@ -173,7 +159,6 @@ const styles = {
     background: "linear-gradient(135deg, #eef2ff, #f8fafc)",
     overflowX: "hidden",
   },
-
   hero: {
     textAlign: "center",
     background:
@@ -181,28 +166,23 @@ const styles = {
     color: "#fff",
     wordBreak: "break-word",
   },
-
   heroTitle: {
     fontWeight: "800",
     lineHeight: "1.2",
   },
-
   heroSubtitle: {
     marginTop: "15px",
     opacity: 0.9,
   },
-
   section: {
     padding: "80px 20px",
     maxWidth: "1300px",
     margin: "auto",
   },
-
   grid: {
     display: "grid",
     gap: "30px",
   },
-
   card: {
     background: "rgba(255,255,255,0.7)",
     backdropFilter: "blur(16px)",
@@ -213,13 +193,11 @@ const styles = {
     border: "1px solid rgba(255,255,255,0.4)",
     textAlign: "center",
   },
-
   imageWrapper: {
   marginBottom: "15px",
-  display: "flex",          // 👈 add this
-  justifyContent: "center", // 👈 add this
+  display: "flex",          
+  justifyContent: "center", 
 },
-
   image: {
     width: "110px",
     height: "110px",
@@ -227,26 +205,22 @@ const styles = {
     objectFit: "cover",
     border: "4px solid #3b82f6",
   },
-
   name: {
     fontSize: "1.2rem",
     fontWeight: "700",
     marginBottom: "8px",
     color: "#0f172a",
   },
-
   degree: {
     fontSize: "0.85rem",
     color: "#2563eb",
     marginBottom: "12px",
     fontWeight: "600",
   },
-
   desc: {
     fontSize: "0.9rem",
     color: "#475569",
     lineHeight: "1.6",
   },
 };
-
 export default Doctors;

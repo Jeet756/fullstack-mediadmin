@@ -2,38 +2,31 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 const topImage = "/img1.jpg";
-const API = "https://fullstack-mediadmin.onrender.com";
-const base = "https://res.cloudinary.com/dtazvhqre/image/upload/f_auto,q_auto/posters/";
-
-const version = Date.now(); // 👈 ye line add kar
-
-const posterImages = [
-  base + "poster1?v=" + version,
-  base + "poster2?v=" + version,
-  base + "poster3?v=" + version
-];
 const Home = () => {
+  const [posters, setPosters] = useState([]);
   const [currentPoster, setCurrentPoster] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(
   typeof window !== "undefined" ? window.innerWidth <= 900 : false
 );
-
 const [isSmall, setIsSmall] = useState(
   typeof window !== "undefined" ? window.innerWidth <= 320 : false
 );
-
-
-  useEffect(() => {
-  const interval = setInterval(() => {
-    setCurrentPoster((prev) => (prev + 1) % posterImages.length);
-  }, 4000);
-
-  return () => clearInterval(interval);
-}, [posterImages.length]);
-
+useEffect(() => {
+  const JSON_URL = "https://raw.githubusercontent.com/jeet756/mediadmin-data/main/posters.json?v=" + Date.now();
+  fetch(JSON_URL)
+    .then(res => res.json())
+    .then(data => {
+      setPosters(data);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
+}, []);
   useEffect(() => {
   let timeout;
-
   const handleResize = () => {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
@@ -41,19 +34,21 @@ const [isSmall, setIsSmall] = useState(
       setIsSmall(window.innerWidth <= 320);
     }, 150);
   };
-
   window.addEventListener("resize", handleResize);
   return () => window.removeEventListener("resize", handleResize);
 }, []);
-
-  const handleNext = () =>
-    setCurrentPoster((prev) => (prev + 1) % posterImages.length);
-
-  const handlePrev = () =>
-    setCurrentPoster((prev) =>
-      prev === 0 ? posterImages.length - 1 : prev - 1
-    );
-
+const handleNext = () =>
+  setCurrentPoster((prev) =>
+    posters.length ? (prev + 1) % posters.length : 0
+  );
+const handlePrev = () =>
+  setCurrentPoster((prev) =>
+    posters.length
+      ? prev === 0
+        ? posters.length - 1
+        : prev - 1
+      : 0
+  );
   return (
     <main style={{ fontFamily: "Poppins, sans-serif", overflowX: "hidden" }}>
       <Helmet>
@@ -82,7 +77,6 @@ const [isSmall, setIsSmall] = useState(
     objectPosition: "right center",
   }}
 />
-
         <div
   style={{
     position: "absolute",
@@ -106,7 +100,6 @@ const [isSmall, setIsSmall] = useState(
           >
             Advanced Healthcare With Trust
           </h1>
-
           <p
             style={{
               marginTop: "15px",
@@ -117,9 +110,8 @@ const [isSmall, setIsSmall] = useState(
           >
             Compassion • Technology • Excellence
           </p>
-
           <Link
-  to="/appointment"
+  to="/contact"
   style={{
     display: "inline-block",
     padding: isSmall ? "6px 12px" : "12px 28px",
@@ -137,7 +129,6 @@ const [isSmall, setIsSmall] = useState(
 </Link>
         </div>
       </section>
-
       <section
         style={{
           position: "relative",
@@ -152,8 +143,6 @@ const [isSmall, setIsSmall] = useState(
             "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
         }}
       >
-      
-
         <div
           style={{
             position: "relative",
@@ -168,21 +157,41 @@ const [isSmall, setIsSmall] = useState(
             alignItems: "center",
           }}
         >
-          <img
-  src={posterImages[currentPoster]}
-  onError={(e) => {
-    e.target.src = "/poster-placeholder.jpg";
-  }}
-  alt="Hospital poster"
-  style={{
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    borderRadius: "20px",
-  }}
-/>
+          {loading ? (
+  <div style={{ color: "#fff", fontSize: "18px" }}>
+    Loading posters...
+  </div>
+) : posters.length > 0 ? (
+  posters[currentPoster]?.type === "image" ? (
+    <img
+      src={posters[currentPoster].media_url}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        borderRadius: "20px"
+      }}
+    />
+  ) : (
+    <video
+      src={posters[currentPoster].media_url}
+      autoPlay
+      muted
+      loop
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+        borderRadius: "20px"
+      }}
+    />
+  )
+) : (
+  <div style={{ color: "#fff" }}>
+    No posters available
+  </div>
+)}
         </div>
-
         <button
           onClick={handlePrev}
           style={{
@@ -190,7 +199,7 @@ const [isSmall, setIsSmall] = useState(
             left: "10px",
             top: "50%",
             transform: "translateY(-50%)",
-            background: "rgba(255,255,255,0.2)",
+            background: "rgba(0,0,0,0.6)",
             border: "none",
             color: "#fff",
             borderRadius: "50%",
@@ -200,7 +209,6 @@ const [isSmall, setIsSmall] = useState(
         >
           ❮
         </button>
-
         <button
           onClick={handleNext}
           style={{
@@ -208,7 +216,7 @@ const [isSmall, setIsSmall] = useState(
             right: "10px",
             top: "50%",
             transform: "translateY(-50%)",
-            background: "rgba(255,255,255,0.2)",
+            background: "rgba(0,0,0,0.6)",
             border: "none",
             color: "#fff",
             borderRadius: "50%",
@@ -219,7 +227,6 @@ const [isSmall, setIsSmall] = useState(
           ❯
         </button>
       </section>
-
       <section
         style={{
           display: "flex",
@@ -239,12 +246,10 @@ const [isSmall, setIsSmall] = useState(
           >
             Heal With Care
           </h2>
-
           <p style={{ margin: "20px 0", opacity: 0.8 }}>
             We provide premium healthcare services with comfort,
             advanced technology, and compassionate treatment.
           </p>
-
           <Link
   to="/contact"
   style={{
@@ -271,7 +276,6 @@ const [isSmall, setIsSmall] = useState(
           />
         </div>
       </section>
-
       <section
         style={{
           background: "linear-gradient(135deg,#f5f9ff,#eef3ff)",
@@ -301,13 +305,12 @@ const [isSmall, setIsSmall] = useState(
             <div style={{ fontSize: "40px", marginBottom: "15px" }}>
               {item.icon}
             </div>
-            <h3 style={{ marginBottom: "10px" }}>{item.title}</h3>
-            <p style={{ opacity: 0.7 }}>{item.text}</p>
+             <h3 style={{ marginBottom: "10px" }}>{item.title}</h3>
+             <p style={{ opacity: 0.7 }}>{item.text}</p>
           </div>
         ))}
       </section>
     </main>
   );
 };
-
 export default Home;

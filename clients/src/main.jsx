@@ -2,8 +2,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
-
-
 import Home from "./components/Home";
 import About from "./components/About";
 import Contact from "./components/Contact";
@@ -20,7 +18,6 @@ import PatientDashboard from "./components/PatientDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Appointment from "./components/Appointment";
 import { HelmetProvider } from "react-helmet-async";
-
 import Applications from "./components/admin/Applications";
 import Appointments from "./components/admin/Appointments";
 import Users from "./components/admin/Users";

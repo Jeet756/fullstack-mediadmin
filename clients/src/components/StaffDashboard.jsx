@@ -2,31 +2,24 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Helmet } from "react-helmet-async";
-
 function StaffDashboard() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-
   const fetchData = async () => {
     if (!from || !to) return alert("Select date range");
     if (new Date(from) > new Date(to))
       return alert("Invalid date range");
-
     setLoading(true);
     try {
       const res = await fetch(
         `${API}/api/my-attendance?from=${from}&to=${to}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const result = await res.json();
-
       if (!res.ok) {
         alert(result.message || "Error");
         setData([]);
@@ -38,10 +31,8 @@ function StaffDashboard() {
     }
     setLoading(false);
   };
-
   const downloadExcel = () => {
     if (!data.length) return alert("No data");
-
     const excelData = data.map((d) => ({
       Date: new Date(d.date).toLocaleDateString("en-GB"),
       Status: d.status,
@@ -49,21 +40,16 @@ function StaffDashboard() {
       Afternoon: d.afternoon ? "✔️" : "",
       Night: d.night ? "✔️" : "",
     }));
-
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-
     const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-
     saveAs(new Blob([buffer]), `attendance_${from}_to_${to}.xlsx`);
   };
-
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
-
   return (
     <div
       style={{
@@ -76,8 +62,6 @@ function StaffDashboard() {
       <Helmet>
         <title>Staff Dashboard</title>
       </Helmet>
-
-      {/* HEADER */}
       <div style={{ marginBottom: "20px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: "600" }}>
           📊 My Attendance
@@ -86,8 +70,6 @@ function StaffDashboard() {
           Track your attendance easily
         </p>
       </div>
-
-      {/* FILTER CARD */}
       <div
         style={{
           display: "flex",
@@ -106,24 +88,19 @@ function StaffDashboard() {
           onChange={(e) => setFrom(e.target.value)}
           style={inputStyle}
         />
-
         <input
           type="date"
           value={to}
           onChange={(e) => setTo(e.target.value)}
           style={inputStyle}
         />
-
         <button style={primaryBtn} onClick={fetchData}>
           🔍 Search
         </button>
-
         <button style={secondaryBtn} onClick={downloadExcel}>
           ⬇️ Export
         </button>
       </div>
-
-      {/* DATA CARD (🔥 SAME ADMIN STYLE SCROLL) */}
       <div
         style={{
           marginTop: "20px",
@@ -159,7 +136,6 @@ function StaffDashboard() {
                   year: "numeric",
                 }
               );
-
               return (
                 <div
                   key={i}
@@ -171,7 +147,6 @@ function StaffDashboard() {
                   }}
                 >
                   <span>{formattedDate}</span>
-
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                     {d.status === "present" && (
                       <>
@@ -180,11 +155,9 @@ function StaffDashboard() {
                         {d.night && <Badge text="Night" color="#a855f7" />}
                       </>
                     )}
-
                     {d.status === "absent" && (
                       <Badge text="Absent" color="#ef4444" />
                     )}
-
                     {d.status === "not_marked" && (
                       <Badge text="Not Marked" color="#f59e0b" />
                     )}
@@ -195,8 +168,6 @@ function StaffDashboard() {
           </div>
         )}
       </div>
-
-      {/* LOGOUT */}
       <button
         style={{ ...secondaryBtn, marginTop: "20px" }}
         onClick={handleLogout}
@@ -206,9 +177,7 @@ function StaffDashboard() {
     </div>
   );
 }
-
 /* 🔥 STYLES */
-
 const inputStyle = {
   padding: "10px",
   borderRadius: "8px",
@@ -216,7 +185,6 @@ const inputStyle = {
   background: "#fff",
   color: "#1e293b",
 };
-
 const primaryBtn = {
   padding: "10px 16px",
   borderRadius: "10px",
@@ -226,7 +194,6 @@ const primaryBtn = {
   cursor: "pointer",
   fontWeight: "500",
 };
-
 const secondaryBtn = {
   padding: "10px 16px",
   borderRadius: "10px",
@@ -235,7 +202,6 @@ const secondaryBtn = {
   color: "#1e293b",
   cursor: "pointer",
 };
-
 /* 🔥 BADGE */
 function Badge({ text, color }) {
   return (
@@ -253,5 +219,4 @@ function Badge({ text, color }) {
     </span>
   );
 }
-
 export default StaffDashboard;

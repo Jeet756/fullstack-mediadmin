@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -11,7 +10,6 @@ function ForgotPassword() {
   const [verifying, setVerifying] = useState(false);
 const [updating, setUpdating] = useState(false);
   const navigate = useNavigate();
-
   const sendOtp = async () => {
     setSending(true);
     try {
@@ -23,13 +21,10 @@ const [updating, setUpdating] = useState(false);
           body: JSON.stringify({ email }),
         }
       );
-
       const data = await res.json();
-
       if (res.ok) {
         setStep(2);
       }
-
       alert(data.message);
     } catch (err) {
       console.error(err);
@@ -38,10 +33,8 @@ const [updating, setUpdating] = useState(false);
       setSending(false);
     }
   };
-
  const verifyOtp = async () => {
-  setVerifying(true);   // 🔥 start loading
-
+  setVerifying(true);   
   try {
     const res = await fetch(
       "https://fullstack-mediadmin.onrender.com/api/verify-reset-otp",
@@ -51,9 +44,7 @@ const [updating, setUpdating] = useState(false);
         body: JSON.stringify({ email, otp }),
       }
     );
-
     const data = await res.json();
-
     if (res.ok) {
       setStep(3);
     } else {
@@ -63,13 +54,11 @@ const [updating, setUpdating] = useState(false);
     console.error(err);
     alert("Something went wrong");
   } finally {
-    setVerifying(false);  // 🔥 stop loading
+    setVerifying(false);  
   }
 };
-
  const resetPassword = async () => {
-  setUpdating(true);  // 🔥 start loading
-
+  setUpdating(true);  
   try {
     const res = await fetch(
       "https://fullstack-mediadmin.onrender.com/api/reset-password",
@@ -79,9 +68,7 @@ const [updating, setUpdating] = useState(false);
         body: JSON.stringify({ email, newPassword: password }),
       }
     );
-
     const data = await res.json();
-
     if (res.ok) {
       alert("Password updated successfully");
       navigate("/login");
@@ -92,10 +79,9 @@ const [updating, setUpdating] = useState(false);
     console.error(err);
     alert("Something went wrong");
   } finally {
-    setUpdating(false); // 🔥 stop loading
+    setUpdating(false); 
   }
 };
-
   return (
     <>
       <style>{`
@@ -107,7 +93,6 @@ const [updating, setUpdating] = useState(false);
           background: linear-gradient(135deg, #0f172a, #1e293b);
           padding: 20px;
         }
-
         .fp-card {
           width: 100%;
           max-width: 420px;
@@ -119,25 +104,21 @@ const [updating, setUpdating] = useState(false);
           border: 1px solid rgba(255,255,255,0.1);
           animation: fadeIn 0.4s ease;
         }
-
         @keyframes fadeIn {
           from {opacity:0; transform: translateY(20px);}
           to {opacity:1; transform: translateY(0);}
         }
-
         .fp-title {
           font-size: 26px;
           font-weight: 700;
           color: #fff;
           margin-bottom: 10px;
         }
-
         .fp-desc {
           font-size: 14px;
           color: #cbd5f5;
           margin-bottom: 25px;
         }
-
         .fp-input {
           width: 100%;
           padding: 12px 14px;
@@ -149,11 +130,9 @@ const [updating, setUpdating] = useState(false);
           background: rgba(255,255,255,0.15);
           color: #fff;
         }
-
         .fp-input::placeholder {
           color: #cbd5e1;
         }
-
         .fp-btn {
           width: 100%;
           padding: 12px;
@@ -165,55 +144,46 @@ const [updating, setUpdating] = useState(false);
           cursor: pointer;
           transition: 0.3s;
         }
-
         .fp-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(99,102,241,0.4);
         }
-
         .fp-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
-
         .step-indicator {
           display: flex;
           justify-content: center;
           margin-bottom: 20px;
           gap: 8px;
         }
-
         .dot {
           width: 10px;
           height: 10px;
           border-radius: 50%;
           background: #475569;
         }
-
         .dot.active {
           background: #6366f1;
           transform: scale(1.2);
         }
       `}</style>
-
       <div className="fp-container">
         <Helmet>
           <title>Reset Password | Shri Gurupad Hospital</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
-
         <div className="fp-card">
           <div className="step-indicator">
             <div className={`dot ${step >= 1 ? "active" : ""}`}></div>
             <div className={`dot ${step >= 2 ? "active" : ""}`}></div>
             <div className={`dot ${step >= 3 ? "active" : ""}`}></div>
           </div>
-
           <div className="fp-title">Reset Password</div>
           <div className="fp-desc">
             Enter your email → verify OTP → set new password
           </div>
-
           {step === 1 && (
             <>
               <input
@@ -223,7 +193,6 @@ const [updating, setUpdating] = useState(false);
                 onChange={(e) => setEmail(e.target.value)}
                 className="fp-input"
               />
-
               <button
                 onClick={sendOtp}
                 disabled={sending}
@@ -233,7 +202,6 @@ const [updating, setUpdating] = useState(false);
               </button>
             </>
           )}
-
           {step === 2 && (
             <>
               <input
@@ -243,7 +211,6 @@ const [updating, setUpdating] = useState(false);
                 onChange={(e) => setOtp(e.target.value)}
                 className="fp-input"
               />
-
               <button 
   onClick={verifyOtp} 
   className="fp-btn"
@@ -253,7 +220,6 @@ const [updating, setUpdating] = useState(false);
 </button>
             </>
           )}
-
           {step === 3 && (
             <>
               <input
@@ -263,7 +229,6 @@ const [updating, setUpdating] = useState(false);
                 onChange={(e) => setPassword(e.target.value)}
                 className="fp-input"
               />
-
               <button 
   onClick={resetPassword} 
   className="fp-btn"
@@ -278,5 +243,4 @@ const [updating, setUpdating] = useState(false);
     </>
   );
 }
-
 export default ForgotPassword;

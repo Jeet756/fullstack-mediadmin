@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-
 const About = () => {
   const [width, setWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
-
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
@@ -14,30 +12,26 @@ const About = () => {
   }, []);
   const [contributors, setContributors] = useState([]);
 const [loading, setLoading] = useState(true);
-
 useEffect(() => {
-  fetch("https://fullstack-mediadmin.onrender.com/api/contributors")
-    .then(res => res.json())
-    .then(data => setContributors(data))
-    .catch(() => setContributors([]))
-    .finally(() => setLoading(false));
+ const JSON_URL = "https://raw.githubusercontent.com/jeet756/mediadmin-data/main/contributors.json?v=" + Date.now();
+fetch(JSON_URL)
+  .then(res => res.json())
+  .then(data => setContributors(data))
+  .catch(() => setContributors([]))
+  .finally(() => setLoading(false));
 }, []);
   const isUltraSmall = width <= 245;
-
   const dynamicCardPadding =
     width <= 200
       ? "12px"
       : width <= 300
       ? "20px"
       : "35px";
-
   return (
     <main style={styles.wrapper}>
       <Helmet>
         <title>About | Shri Gurupad Hospital</title>
       </Helmet>
-
-      {/* HERO */}
       <section
         style={{
           ...styles.hero,
@@ -54,7 +48,6 @@ useEffect(() => {
           >
             About Shri Gurupad Hospital
           </h1>
-
           <p
             style={{
               ...styles.subtitle,
@@ -66,8 +59,6 @@ useEffect(() => {
           </p>
         </div>
       </section>
-
-      {/* WHO WE ARE */}
       <section style={styles.section}>
         <div style={styles.container}>
           <h2
@@ -78,19 +69,16 @@ useEffect(() => {
           >
             Who We Are
           </h2>
-
           <p style={styles.text}>
             Shri Gurupad Hospital is a modern, multispecialty healthcare
             institution dedicated to providing world-class medical services.
           </p>
-
           <p style={styles.text}>
             With advanced infrastructure and ethical practices, we create a
             healing environment built on trust and excellence.
           </p>
         </div>
       </section>
-      {/* MISSION VISION VALUES */}
       <section style={styles.mvvSection}>
         <div
           style={{
@@ -104,7 +92,6 @@ useEffect(() => {
             gap: width <= 300 ? "20px" : "40px",
           }}
         >
-          {/* CARD */}
           {[
             {
               title: "🎯 Our Mission",
@@ -141,8 +128,6 @@ useEffect(() => {
               <p>{item.content}</p>
             </div>
           ))}
-
-          {/* VALUES CARD */}
           <div
             style={{
               ...styles.card,
@@ -163,11 +148,9 @@ useEffect(() => {
   <h2 style={{ textAlign: "center", marginBottom: "30px" }}>
     Our Contributors
   </h2>
-
   <p style={{ textAlign: "center", marginBottom: "20px", color: "#64748b" }}>
     Our contributors who support and strengthen our healthcare mission
   </p>
-
   <div
     style={{
       display: "grid",
@@ -222,14 +205,12 @@ useEffect(() => {
           Photo Not Available
         </div>
       )}
-
       <h4 style={{ marginTop: "10px" }}>{c.name}</h4>
     </div>
   ))
 )}
   </div>
 </section>
-      {/* CTA */}
       <section
         style={{
           ...styles.cta,
@@ -239,11 +220,9 @@ useEffect(() => {
         <h2 style={{ fontSize: width <= 300 ? "16px" : "30px" }}>
           We Are Available 24/7
         </h2>
-
         <p style={{ opacity: 0.9 }}>
           Your health is our highest priority.
         </p>
-
         <Link
           to="/contact"
           style={{
@@ -258,70 +237,58 @@ useEffect(() => {
     </main>
   );
 };
-
 const styles = {
   wrapper: {
     fontFamily: "Poppins, sans-serif",
     background: "linear-gradient(135deg, #eef2ff, #f8fafc)",
     overflowX: "hidden",
   },
-
   hero: {
     textAlign: "center",
     background:
       "linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6)",
     color: "#fff",
   },
-
   heroContent: {
     maxWidth: "900px",
     margin: "auto",
   },
-
   title: {
     fontWeight: "800",
     lineHeight: "1.2",
   },
-
   subtitle: {
     marginTop: "20px",
     opacity: 0.95,
   },
-
   section: {
     padding: "60px 15px",
   },
-
   container: {
     maxWidth: "900px",
     margin: "auto",
     textAlign: "center",
   },
-
   sectionHeading: {
     marginBottom: "25px",
     fontWeight: "700",
   },
-
   text: {
     lineHeight: "1.8",
     marginBottom: "15px",
     color: "#475569",
     fontSize: "0.95rem",
   },
-
   mvvSection: {
     padding: "60px 15px",
     background:
       "linear-gradient(180deg, #ffffff, #f0f6ff)",
   },
-
   mvvGrid: {
     maxWidth: "1100px",
     margin: "auto",
     display: "grid",
   },
-
   card: {
     background: "rgba(255,255,255,0.7)",
     backdropFilter: "blur(16px)",
@@ -330,26 +297,22 @@ const styles = {
     transition: "all 0.3s ease",
     border: "1px solid rgba(255,255,255,0.4)",
   },
-
   cardTitle: {
     marginBottom: "12px",
     fontSize: "1.1rem",
     fontWeight: "700",
   },
-
   list: {
     paddingLeft: "18px",
     lineHeight: "1.7",
     fontSize: "0.9rem",
   },
-
   cta: {
     textAlign: "center",
     background:
       "linear-gradient(135deg, #2563eb, #1e3a8a)",
     color: "#fff",
   },
-
   ctaBtn: {
     display: "inline-block",
     marginTop: "20px",
@@ -360,5 +323,4 @@ const styles = {
     fontWeight: "600",
   },
 };
-
 export default About;

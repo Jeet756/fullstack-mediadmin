@@ -5,13 +5,11 @@ function Join() {
   const [width, setWidth] = useState(
   typeof window !== "undefined" ? window.innerWidth : 1200
 );
-
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -24,25 +22,20 @@ function Join() {
     experience: "",
     license: "",
   });
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
  const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
-
   try {
     const response = await fetch("https://fullstack-mediadmin.onrender.com/api/applications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-
     const data = await response.json();
     alert(data.message);
-
   } catch (error) {
     console.error(error);
     alert("Application failed");
@@ -50,21 +43,18 @@ function Join() {
     setLoading(false);
   }
 };
-
   const dynamicPadding =
     width <= 200
       ? "15px"
       : width <= 350
       ? "25px"
       : "40px";
-
   return (
     <>
       <style>{`
         * {
           box-sizing: border-box;
         }
-
         .page {
           min-height: 100vh;
           background: linear-gradient(135deg, #eef2ff, #e0f2fe);
@@ -75,7 +65,6 @@ function Join() {
           font-family: 'Segoe UI', sans-serif;
           overflow-x: hidden;
         }
-
         .card {
           width: 100%;
           max-width: 900px;
@@ -87,7 +76,6 @@ function Join() {
           word-break: break-word;
           overflow: hidden;
         }
-
         h1 {
           text-align: center;
           margin-bottom: 10px;
@@ -95,38 +83,32 @@ function Join() {
           color: #1e293b;
           word-break: break-word;
         }
-
         .subtitle {
           text-align: center;
           margin-bottom: 40px;
           color: #64748b;
           word-break: break-word;
         }
-
         h3 {
           margin-bottom: 20px;
           color: #334155;
           border-bottom: 2px solid #e2e8f0;
           padding-bottom: 5px;
         }
-
         .grid {
           display: grid;
           gap: 20px;
         }
-
         .field {
           display: flex;
           flex-direction: column;
           min-width: 0;
         }
-
         .field label {
           margin-bottom: 6px;
           font-size: 14px;
           color: #475569;
         }
-
         .field input,
         .field select,
         .field textarea {
@@ -137,16 +119,13 @@ function Join() {
           font-size: 14px;
           width: 100%;
         }
-
         textarea {
           resize: none;
         }
-
         .btn-container {
           text-align: center;
           margin-top: 40px;
         }
-
         button {
           padding: 14px 40px;
           border-radius: 30px;
@@ -159,14 +138,12 @@ function Join() {
           width: 100%;
           max-width: 300px;
         }
-
         @media (min-width: 600px) {
           .grid.two {
             grid-template-columns: repeat(2, 1fr);
           }
         }
       `}</style>
-
       <div className="page">
         <Helmet>
   <title>Medical Jobs & Careers | Join Shri Gurupad Hospital</title>
@@ -184,44 +161,35 @@ function Join() {
           <p className="subtitle">
             Apply for hospital jobs including doctors, nurses, lab technicians, and healthcare staff in a professional medical environment.
           </p>
-
           <form onSubmit={handleSubmit}>
             <h3>Personal Details</h3>
-
             <div className="grid two">
               <div className="field">
                 <label>First Name</label>
                 <input name="firstName" onChange={handleChange} required />
               </div>
-
               <div className="field">
                 <label>Last Name</label>
                 <input name="lastName" onChange={handleChange} required />
               </div>
-
               <div className="field">
                 <label>Email</label>
                 <input type="email" name="email" onChange={handleChange} required />
               </div>
-
               <div className="field">
                 <label>Phone</label>
                 <input type="tel" name="phone" onChange={handleChange} required />
               </div>
-
               <div className="field">
                 <label>Date of Birth</label>
                 <input type="date" name="dob" onChange={handleChange} required />
               </div>
             </div>
-
             <div className="field" style={{ marginTop: "20px" }}>
               <label>Full Address</label>
               <textarea rows="3" name="address" onChange={handleChange} required />
             </div>
-
             <h3 style={{ marginTop: "40px" }}>Professional Details</h3>
-
             <div className="field">
               <label>Position Applying For</label>
               <select name="position" onChange={handleChange} required>
@@ -234,24 +202,20 @@ function Join() {
                 <option>Receptionist</option>
               </select>
             </div>
-
             <div className="grid two" style={{ marginTop: "20px" }}>
               <div className="field">
                 <label>Highest Qualification</label>
                 <input name="qualification" onChange={handleChange} required />
               </div>
-
               <div className="field">
                 <label>Years of Experience</label>
                 <input type="number" name="experience" onChange={handleChange} required />
               </div>
             </div>
-
             <div className="field" style={{ marginTop: "20px" }}>
               <label>Medical Registration / License (if any)</label>
               <input name="license" onChange={handleChange} />
             </div>
-
             <div className="btn-container">
               <button type="submit" disabled={loading}>
   {loading ? "Submitting..." : "Submit Application"}
@@ -263,5 +227,4 @@ function Join() {
     </>
   );
 }
-
 export default Join;

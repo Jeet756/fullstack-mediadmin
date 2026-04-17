@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 const Appointment = () => {
   const [loading, setLoading] = useState(false);
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,26 +12,21 @@ const Appointment = () => {
     appointmentDate: "",
     doctorPriority: "", 
   });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
-
   try {
     const res = await fetch("https://fullstack-mediadmin.onrender.com/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-
     const data = await res.json();
     alert(data.message || "Thank you for your enquiry, our team will reach you!");
-
     setFormData({
       name: "",
       email: "",
@@ -43,7 +37,6 @@ const Appointment = () => {
       appointmentDate: "",
       doctorPriority: "",
     });
-
   } catch (err) {
     console.error(err);
     alert("Something went wrong! Please try again.");
@@ -51,8 +44,6 @@ const Appointment = () => {
     setLoading(false);
   }
 };
-  
-
   return (
     <main style={styles.container}>
       <Helmet>
@@ -114,7 +105,6 @@ const Appointment = () => {
           required
           style={styles.input}
         />
-
         <label style={styles.label}>Appointment Date</label>
         <input
           name="appointmentDate"
@@ -124,7 +114,6 @@ const Appointment = () => {
           required
           style={styles.input}
         />
-
         <input
           name="doctorPriority"
           value={formData.doctorPriority}
@@ -140,7 +129,6 @@ const Appointment = () => {
     </main>
   );
 };
-
 const styles = {
   container: {
     maxWidth: "600px",
@@ -185,5 +173,4 @@ const styles = {
     transition: "0.3s",
   },
 };
-
 export default Appointment;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-
 function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -17,7 +16,6 @@ const downloadExcel = () => {
   if (filtered.length === 0) {
     return alert("No data to export");
   }
-
   const formattedData = filtered.map((a) => ({
     Name: a.name,
     Email: a.email,
@@ -29,34 +27,26 @@ const downloadExcel = () => {
     "Created Date": formatDate(a.createdAt),
     Priority: a.doctorPriority,
   }));
-
   const worksheet = XLSX.utils.json_to_sheet(formattedData);
   const workbook = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(workbook, worksheet, "Appointments");
-
   const excelBuffer = XLSX.write(workbook, {
     bookType: "xlsx",
     type: "array",
   });
-
   const fileData = new Blob([excelBuffer], {
     type: "application/octet-stream",
   });
-
   saveAs(fileData, `appointments_${Date.now()}.xlsx`);
 };
 const deleteAllAppointments = async () => {
   if (!fromDate || !toDate) {
     return alert("Select from and to date first");
   }
-
   const confirmDelete = window.confirm(
     "Are you sure you want to delete ALL appointments in this date range?"
   );
-
   if (!confirmDelete) return;
-
   try {
     const res = await fetch(`${API}/api/appointments`, {
       method: "DELETE",
@@ -70,105 +60,75 @@ const deleteAllAppointments = async () => {
         type: dateType,
       }),
     });
-
     const data = await res.json();
-
     if (!res.ok) return alert(data.message);
-
     alert(`${data.count} appointments deleted`);
-
-    fetchAppointments(); // refresh
-
+    fetchAppointments(); 
   } catch {
     alert("Delete failed");
   }
 };
 const fetchAppointments = async () => {
   setLoading(true);
-
   try {
     let url = `${API}/api/appointments`;
-
     if (fromDate && toDate) {
       url += `?from=${fromDate}&to=${toDate}&type=${dateType}`;
     }
-
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const data = await res.json();
-
     if (!res.ok) return alert(data.message);
-
     setAppointments(data);
     setFiltered(data);
-
   } catch {
     alert("Failed to load appointments");
   } finally {
     setLoading(false);
   }
 };
-// ======= FETCH_WITH_FILTER_END =======
-
   const deleteAppointment = async (id) => {
     if (!window.confirm("Delete this appointment?")) return;
-
     const res = await fetch(`${API}/api/appointments/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const data = await res.json();
     if (!res.ok) return alert(data.message);
-
     setAppointments((prev) => prev.filter((a) => a.id !== id));
     setFiltered((prev) => prev.filter((a) => a.id !== id));
   };
-
   useEffect(() => {
     fetchAppointments();
   }, []);
-
   useEffect(() => {
   const q = search.toLowerCase();
-
   setFiltered(
     appointments.filter((a) => {
-
-      // 👉 date special handling
       if (searchKey === "appointmentDate") {
         return formatDate(a.appointmentDate)
           .toLowerCase()
           .includes(q);
       }
-
       const value = a[searchKey];
       if (!value) return false;
-
       return value.toString().toLowerCase().includes(q);
     })
   );
 }, [search, searchKey, appointments]);
-
   const formatDate = (date) => {
   if (!date) return "N/A";
-
-  const d = new Date(date); // 👈 FIXED
-
+  const d = new Date(date); 
   if (isNaN(d.getTime())) return "Invalid";
-
   return d.toLocaleDateString("en-IN");
 };
-
   return (
     <>
       <style>{`
         .app-container {
           padding: 10px;
         }
-
         .app-header {
           display: flex;
           justify-content: space-between;
@@ -176,12 +136,10 @@ const fetchAppointments = async () => {
           flex-wrap: wrap;
           margin-bottom: 20px;
         }
-
         .app-header h2 {
           font-size: 24px;
           color: #1e293b;
         }
-
         .search-box {
   padding: 10px 15px;
   border-radius: 25px;
@@ -190,13 +148,11 @@ const fetchAppointments = async () => {
   width: 100%;
   min-width: 0;
 }
-
         .grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
           gap: 20px;
         }
-
         .card {
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(12px);
@@ -208,24 +164,20 @@ const fetchAppointments = async () => {
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-
           width: 100%;
           min-width: 0;
           box-sizing: border-box;
         }
-
         .card:hover {
           transform: translateY(-5px);
           box-shadow: 0 15px 35px rgba(0,0,0,0.15);
         }
-
         .name {
           font-size: 18px;
           font-weight: 600;
           margin-bottom: 10px;
           color: #0f172a;
         }
-
         .info {
           font-size: 14px;
           color: #475569;
@@ -233,7 +185,6 @@ const fetchAppointments = async () => {
           word-break: break-word;
           overflow-wrap: anywhere;
         }
-
         .badge {
           display: inline-block;
           padding: 4px 10px;
@@ -243,7 +194,6 @@ const fetchAppointments = async () => {
           font-size: 12px;
           margin-top: 5px;
         }
-
         .delete-btn {
           margin-top: 15px;
           padding: 10px;
@@ -255,17 +205,14 @@ const fetchAppointments = async () => {
           font-weight: 500;
           transition: 0.2s;
         }
-
         .delete-btn:hover {
           opacity: 0.85;
         }
-
         .empty {
           text-align: center;
           padding: 40px;
           color: #64748b;
         }
-
         @media (max-width: 500px) {
           .app-header {
             flex-direction: column;
@@ -273,30 +220,24 @@ const fetchAppointments = async () => {
             gap: 10px;
           }
         }
-
         @media (max-width: 350px) {
           .grid {
             grid-template-columns: 1fr;
           }
-
           .card {
             padding: 14px;
           }
-
           .name {
             font-size: 16px;
           }
-
           .info {
             font-size: 13px;
           }
-
           .search-box {
             width: 100%;
           }
         }
       `}</style>
-
       <div className="app-container">
         <div className="app-header">
           <h2>Appointments</h2>
@@ -309,7 +250,6 @@ const fetchAppointments = async () => {
   }}
 >
 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-  
   <select
     value={dateType}
     onChange={(e) => setDateType(e.target.value)}
@@ -318,21 +258,18 @@ const fetchAppointments = async () => {
     <option value="appointmentDate">Appointment Date</option>
     <option value="createdAt">Created Date</option>
   </select>
-
   <input
     type="date"
     value={fromDate}
     onChange={(e) => setFromDate(e.target.value)}
     className="search-box"
   />
-
   <input
     type="date"
     value={toDate}
     onChange={(e) => setToDate(e.target.value)}
     className="search-box"
   />
-
   <button
     onClick={fetchAppointments}
     className="delete-btn"
@@ -382,7 +319,6 @@ const fetchAppointments = async () => {
     <option value="symptoms">Symptoms</option>
     <option value="doctorPriority">Priority</option>
   </select>
-
   <input
     type="text"
     placeholder={`Search ${searchKey}`}
@@ -392,7 +328,6 @@ const fetchAppointments = async () => {
   />
 </div>
         </div>
-
         {loading ? (
           <div className="empty">Loading appointments...</div>
         ) : filtered.length === 0 ? (
@@ -412,7 +347,6 @@ const fetchAppointments = async () => {
         <div key={a.id} className="card">
   <div>
     <div className="name">{a.name}</div>
-
     <div className="info"><b>Email:</b> {a.email}</div>
     <div className="info"><b>Phone:</b> {a.phone}</div>
     <div className="info"><b>Age:</b> {a.age}</div>
@@ -422,7 +356,6 @@ const fetchAppointments = async () => {
     <div className="info"><b>Created:</b> {formatDate(a.createdAt)}</div>
     <div className="badge">{a.doctorPriority}</div>
   </div>
-
   <button
     className="delete-btn"
     onClick={() => deleteAppointment(a.id)}
@@ -438,5 +371,4 @@ const fetchAppointments = async () => {
     </>
   );
 }
-
 export default Appointments;

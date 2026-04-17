@@ -4,7 +4,6 @@ import {
   Droppable,
   Draggable
 } from "@hello-pangea/dnd";
-
 export default function DoctorsAdmin() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
@@ -23,24 +22,19 @@ const [isEditOpen, setIsEditOpen] = useState(false);
   const [image, setImage] = useState(null);
   const [editId, setEditId] = useState(null);
 const [search, setSearch] = useState("");
-
  const fetchDoctors = async () => {
   try {
-    setFetchLoading(true); // 👈 start loading
-
+    setFetchLoading(true); 
     const res = await fetch(`${API}/api/doctors`);
     const data = await res.json();
-
     data.sort((a, b) => a.order_index - b.order_index);
-
     setDoctors(data);
   } catch (err) {
     console.error(err);
   } finally {
-    setFetchLoading(false); // 👈 stop loading
+    setFetchLoading(false); 
   }
 };
-
   useEffect(() => {
     fetchDoctors();
   }, []);
@@ -51,21 +45,15 @@ const filteredDoctors = doctors.filter((doc) =>
   try {
     setLoading(true);
     const fd = new FormData();
-
     Object.keys(form).forEach((k) => fd.append(k, form[k]));
-
     if (image) {
   fd.append("image", image);
 }
-
-fd.append("order_index", doctors.length); // 🔥 ADD THIS
-
+fd.append("order_index", doctors.length); 
     const url = editId
       ? `${API}/api/doctors/${editId}`
       : `${API}/api/doctors`;
-
     const method = editId ? "PUT" : "POST";
-
     const res = await fetch(url, {
       method,
       headers: {
@@ -73,38 +61,31 @@ fd.append("order_index", doctors.length); // 🔥 ADD THIS
       },
       body: fd
     });
-
     const data = await res.json();
-
     if (!res.ok) {
       throw new Error(data.message || "Something went wrong");
     }
-
     alert(editId ? "Doctor updated ✅" : "Doctor added ✅");
-
     setForm({ name: "", degree: "", description: "" });
     setImage(null);
     setEditId(null);
-setIsEditOpen(false); // 👈 ye add kar
+setIsEditOpen(false); 
     fetchDoctors();
   } catch (err) {
     console.error(err);
     alert("Error: " + err.message);
   }
   finally {
-    setLoading(false); // 👈 stop loading
+    setLoading(false); 
   }
 };
-
   const handleDelete = async (id) => {
   try {
     setDeleteLoadingId(id);
-
     await fetch(`${API}/api/doctors/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     });
-
     fetchDoctors();
   } catch (err) {
     alert("Delete failed");
@@ -112,7 +93,6 @@ setIsEditOpen(false); // 👈 ye add kar
     setDeleteLoadingId(null);
   }
 };
-
   const handleEdit = (doc) => {
   setEditId(doc.id);
   setForm({
@@ -120,14 +100,12 @@ setIsEditOpen(false); // 👈 ye add kar
     degree: doc.degree,
     description: doc.description
   });
-  setIsEditOpen(true); // 👈 open modal
+  setIsEditOpen(true); 
 };
 const handleSaveOrder = async () => {
   try {
     setOrderLoading(true);
-
     const order = doctors.map((d) => d.id);
-
     const res = await fetch(`${API}/api/doctors/reorder`, {
       method: "PUT",
       headers: {
@@ -136,9 +114,7 @@ const handleSaveOrder = async () => {
       },
       body: JSON.stringify({ order })
     });
-
     if (!res.ok) throw new Error();
-
     setIsOrderChanged(false);
     fetchDoctors();
   } catch {
@@ -149,13 +125,11 @@ const handleSaveOrder = async () => {
 };
 const handleDragEnd = (result) => {
   if (!result.destination) return;
-
   const items = Array.from(doctors);
   const [moved] = items.splice(result.source.index, 1);
   items.splice(result.destination.index, 0, moved);
-
   setDoctors(items);
-  setIsOrderChanged(true); // 👈 mark change
+  setIsOrderChanged(true); 
 };
 const inputStyle = {
   width: "100%",
@@ -164,8 +138,6 @@ const inputStyle = {
   borderRadius: "6px",
   border: "1px solid #ccc"
 };
-
-
 const primaryBtn = {
   background: "#2563eb",
   color: "#fff",
@@ -175,7 +147,6 @@ const primaryBtn = {
   cursor: "pointer",
   marginTop: "10px"
 };
-
 const saveBtn = {
   background: "green",
   color: "#fff",
@@ -185,7 +156,6 @@ const saveBtn = {
   marginBottom: "20px",
   cursor: "pointer"
 };
-
 const editBtn = {
   background: "#3b82f6",
   color: "#fff",
@@ -195,7 +165,6 @@ const editBtn = {
   cursor: "pointer",
   flex: "1"
 };
-
 const deleteBtn = {
   background: "#ef4444",
   color: "#fff",
@@ -214,8 +183,6 @@ const deleteBtn = {
 }}>
   Doctors Management
 </h2>
-
-    {/* SEARCH */}
     <input
       placeholder="Search doctor..."
       value={search}
@@ -228,8 +195,6 @@ const deleteBtn = {
         border: "1px solid #ccc"
       }}
     />
-
-    {/* FORM */}
     <div
       style={{
         background: "#fff",
@@ -240,7 +205,6 @@ const deleteBtn = {
       }}
     >
       <h3>Add Doctor</h3>
-
       <input
         placeholder="Name"
         value={form.name}
@@ -249,7 +213,6 @@ const deleteBtn = {
         }
         style={inputStyle}
       />
-
       <input
         placeholder="Degree"
         value={form.degree}
@@ -258,7 +221,6 @@ const deleteBtn = {
         }
         style={inputStyle}
       />
-
       <textarea
         placeholder="Description"
         value={form.description}
@@ -267,7 +229,6 @@ const deleteBtn = {
         }
         style={{ ...inputStyle, height: "80px" }}
       />
-
       <label style={{
   display: "block",
   width: "100%",
@@ -280,15 +241,12 @@ const deleteBtn = {
   marginTop: "10px"
 }}>
   {image ? image.name : "Choose Image"}
-
   <input
     type="file"
     onChange={(e) => setImage(e.target.files[0])}
     style={{ display: "none" }}
   />
 </label>
-
-      {/* IMAGE PREVIEW */}
       {image && (
         <img
           src={URL.createObjectURL(image)}
@@ -297,12 +255,10 @@ const deleteBtn = {
           style={{ marginTop: "10px", borderRadius: "6px" }}
         />
       )}
-
       <button onClick={handleSubmit} style={primaryBtn} disabled={loading}>
   {loading ? "Adding..." : "Add"}
 </button>
     </div>
-
     {isOrderChanged && (
   <button
     onClick={handleSaveOrder}
@@ -312,13 +268,10 @@ const deleteBtn = {
     {orderLoading ? "Saving..." : "Save Order"}
   </button>
 )}
-
-    {/* DRAG LIST */}
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="doctors">
         {(provided) => (
           <div ref={provided.innerRef} {...provided.droppableProps}>
-            {/* EMPTY STATE */}
   {fetchLoading ? (
   <p style={{ textAlign: "center", color: "#777" }}>
     Loading doctors...
@@ -348,7 +301,7 @@ const deleteBtn = {
   marginBottom: "15px",
   borderRadius: "10px",
   display: "flex",
-  flexWrap: "wrap", // 🔥 important
+  flexWrap: "wrap", 
   gap: "10px",
   alignItems: "center",
   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
@@ -360,14 +313,12 @@ const deleteBtn = {
   width="80"
   style={{ borderRadius: "8px", flexShrink: 0 }}
 />
-
                     <div style={{ flex: "1 1 120px", minWidth: "100px" }}>
                       <h4 style={{ margin: 0 }}>{doc.name}</h4>
                       <p style={{ margin: "5px 0", color: "#666" }}>
                         {doc.degree}
                       </p>
                     </div>
-
                     <div style={{
   display: "flex",
   gap: "8px",
@@ -381,7 +332,6 @@ const deleteBtn = {
   >
     Edit
   </button>
-
   <button
     onClick={() => {
       if (window.confirm("Delete this doctor?")) {
@@ -423,7 +373,6 @@ const deleteBtn = {
       width: "400px"
     }}>
       <h3>Edit Doctor</h3>
-
       <input
         value={form.name}
         onChange={(e) =>
@@ -431,7 +380,6 @@ const deleteBtn = {
         }
         style={inputStyle}
       />
-
       <input
         value={form.degree}
         onChange={(e) =>
@@ -439,7 +387,6 @@ const deleteBtn = {
         }
         style={inputStyle}
       />
-
       <textarea
         value={form.description}
         onChange={(e) =>
@@ -447,7 +394,6 @@ const deleteBtn = {
         }
         style={{ ...inputStyle, height: "80px" }}
       />
-
       <label style={{
   display: "block",
   width: "100%",
@@ -460,14 +406,12 @@ const deleteBtn = {
   marginTop: "10px"
 }}>
   {image ? image.name : "Choose Image"}
-
   <input
     type="file"
     onChange={(e) => setImage(e.target.files[0])}
     style={{ display: "none" }}
   />
 </label>
-
       <button
         onClick={handleSubmit}
         style={primaryBtn}
@@ -475,7 +419,6 @@ const deleteBtn = {
       >
         {loading ? "Updating..." : "Update"}
       </button>
-
       <button
         onClick={() => setIsEditOpen(false)}
         style={{

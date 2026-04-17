@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
-
 function Faq() {
   const [activeIndex, setActiveIndex] = useState(0);
-
   const faqs = [
     {
       question: "What are the hospital's visiting hours?",
@@ -46,11 +44,9 @@ function Faq() {
         "Yes, we have a fully stocked pharmacy inside the hospital premises for patient convenience.",
     },
   ];
-
   const toggleFAQ = (index) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
-
   return (
     <>
       <style>{`
@@ -60,7 +56,6 @@ function Faq() {
           background: linear-gradient(135deg, #eef2ff, #e0f7fa);
           font-family: 'Segoe UI', sans-serif;
         }
-
         .heading {
   text-align: center;
   font-size: clamp(22px, 6vw, 38px); /* responsive font */
@@ -70,12 +65,10 @@ function Faq() {
   padding: 0 10px; /* side space */
   word-break: break-word; /* force wrap on very small screens */
 }
-
         .faq-container {
           max-width: 900px;
           margin: auto;
         }
-
         .faq-item {
           background: rgba(255, 255, 255, 0.8);
           backdrop-filter: blur(12px);
@@ -86,7 +79,6 @@ function Faq() {
           transition: 0.3s ease;
           border: 1px solid rgba(255,255,255,0.4);
         }
-
         .faq-question {
           padding: 20px 25px;
           cursor: pointer;
@@ -96,11 +88,9 @@ function Faq() {
           align-items: center;
           color: #1e293b;
         }
-
         .faq-question:hover {
           background: rgba(99,102,241,0.05);
         }
-
         .faq-answer {
           padding: 0 25px 20px 25px;
           font-size: 14px;
@@ -108,22 +98,18 @@ function Faq() {
           line-height: 1.6;
           animation: fadeIn 0.3s ease-in-out;
         }
-
         .icon {
           font-size: 18px;
           transition: transform 0.3s ease;
         }
-
         .rotate {
           transform: rotate(180deg);
         }
-
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-5px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-
       <div className="faq-page">
         <Helmet>
   <title>FAQs | Hospital Information & Patient Help</title>
@@ -133,7 +119,6 @@ function Faq() {
   />
 </Helmet>
         <h1 className="heading">Hospital FAQs - Patient Questions & Answers</h1>
-
         <div className="faq-container">
           {faqs.map((faq, index) => (
             <div className="faq-item" key={index}>
@@ -150,7 +135,6 @@ function Faq() {
                   ▼
                 </span>
               </div>
-
               {activeIndex === index && (
                 <div className="faq-answer">{faq.answer}</div>
               )}
@@ -161,5 +145,4 @@ function Faq() {
     </>
   );
 }
-
 export default Faq;

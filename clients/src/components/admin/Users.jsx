@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 function Users() {
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -8,17 +7,14 @@ function Users() {
 const [searchKey, setSearchKey] = useState("firstName");
   const token = localStorage.getItem("token");
   const API = "https://fullstack-mediadmin.onrender.com";
-
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
       if (!res.ok) return alert(data.message);
-
       setUsers(data);
       setFiltered(data);
     } catch {
@@ -27,26 +23,20 @@ const [searchKey, setSearchKey] = useState("firstName");
       setLoading(false);
     }
   };
-
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
-
     const res = await fetch(`${API}/api/users/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-
     const data = await res.json();
     if (!res.ok) return alert(data.message);
-
     setUsers((prev) => prev.filter((u) => u.id !== id));
     setFiltered((prev) => prev.filter((u) => u.id !== id));
   };
-
   useEffect(() => {
     fetchUsers();
   }, []);
-
  useEffect(() => {
   const q = search.toLowerCase();
   setFiltered(
@@ -57,21 +47,18 @@ const [searchKey, setSearchKey] = useState("firstName");
     })
   );
 }, [search, searchKey, users]);
-
   return (
     <>
       <style>{`
       * {
   box-sizing: border-box;
 }
-
 body {
   overflow-x: hidden;
 }
         .user-container {
           padding: 10px;
         }
-
         .user-header {
           display: flex;
           justify-content: space-between;
@@ -79,12 +66,10 @@ body {
           flex-wrap: wrap;
           margin-bottom: 20px;
         }
-
         .user-header h2 {
           font-size: 24px;
           color: #1e293b;
         }
-
 .search-box {
   padding: 10px 12px;
   border-radius: 25px;
@@ -94,21 +79,18 @@ body {
   min-width: 0;
   max-width: 100%;
 }
-
         .name {
           font-size: 18px;
           font-weight: 600;
           margin-bottom: 10px;
           color: #0f172a;
         }
-
         .info {
           font-size: 14px;
           color: #475569;
           margin-bottom: 6px;
           word-break: break-word;
         }
-
         .badge {
           display: inline-block;
           padding: 4px 10px;
@@ -118,7 +100,6 @@ body {
           font-size: 12px;
           margin-top: 5px;
         }
-
         .delete-btn {
           margin-top: 15px;
           padding: 10px;
@@ -129,11 +110,9 @@ body {
           cursor: pointer;
           font-weight: 500;
         }
-
         .delete-btn:hover {
           opacity: 0.85;
         }
-
         .empty {
           text-align: center;
           padding: 40px;
@@ -152,7 +131,6 @@ body {
           }
         }
       `}</style>
-
       <div className="user-container">
         <div className="user-header">
           <h2>Users</h2>
@@ -162,7 +140,7 @@ body {
     gap: "10px",
     flexWrap: "wrap",
     width: "100%",
-    minWidth: 0, // 🔥 IMPORTANT
+    minWidth: 0, 
   }}
 >
   <select
@@ -179,7 +157,6 @@ body {
     <option value="phone">Phone</option>
     <option value="role">Role</option>
   </select>
-
   <input
     type="text"
     placeholder={`Search ${searchKey}`}
@@ -189,7 +166,6 @@ body {
   />
 </div>
         </div>
-
         {loading ? (
           <div className="empty">Loading users...</div>
         ) : filtered.length === 0 ? (
@@ -222,7 +198,6 @@ body {
         <div style={{ fontSize: "13px", color: "#555" }}>{u.email}</div>
         <div style={{ fontSize: "13px", color: "#555" }}>{u.phone}</div>
       </div>
-
       <div style={{ textAlign: "right" }}>
         <div
           style={{
@@ -236,9 +211,7 @@ body {
         >
           {u.role}
         </div>
-
         <br />
-
         <button
           onClick={() => deleteUser(u.id)}
           style={{
@@ -262,5 +235,4 @@ body {
     </>
   );
 }
-
 export default Users;

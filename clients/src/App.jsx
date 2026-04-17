@@ -2,7 +2,6 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-
 function App() {
   return (
     <div style={{ 
@@ -21,5 +20,4 @@ function App() {
     </div>
   );
 }
-
 export default App;

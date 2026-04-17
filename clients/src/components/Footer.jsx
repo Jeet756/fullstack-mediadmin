@@ -8,24 +8,20 @@ import {
   FaPhoneAlt,
   FaEnvelope,
 } from "react-icons/fa";
-
 const Footer = () => {
   const [width, setWidth] = useState(
   typeof window !== "undefined" ? window.innerWidth : 1200
 );
-
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const getColumns = () => {
     if (width > 992) return "repeat(4, 1fr)";
     if (width > 600) return "repeat(2, 1fr)";
     return "1fr";
   };
-
   return (
     <footer id="footer" style={styles.footer}>
       <div
@@ -44,26 +40,22 @@ const Footer = () => {
           >
             Shri Gurupad Hospital
           </h3>
-
           <address style={styles.text}>
   <FaMapMarkerAlt style={styles.icon} />
   Aashagram Road, Barwani, Madhya Pradesh, India
 </address>
-
           <p style={styles.text}>
             <FaPhoneAlt style={styles.icon} />
             <a href="tel:+919XXXXXXXXX" style={styles.link}>
   +91 9XXXXXXXXX
 </a>
           </p>
-
           <p style={styles.text}>
             <FaEnvelope style={styles.icon} />
             <a href="mailto:info@shrigurupad.com" style={styles.link}>
   info@shrigurupad.com
 </a>
           </p>
-
           <a
             href="https://maps.app.goo.gl/dd2RSVH87v4Mr4jQ6"
             target="_blank"
@@ -73,7 +65,6 @@ const Footer = () => {
             Find Our Hospital Location on Google Maps →
           </a>
         </div>
-
         <div style={styles.column}>
           <h4 style={styles.heading}>Quick Links</h4>
           <ul style={styles.list}>
@@ -84,7 +75,6 @@ const Footer = () => {
   <li><Link to="/join" style={styles.link}>Join</Link></li>
 </ul>
         </div>
-
         <div style={styles.column}>
           <h4 style={styles.heading}>Our Services</h4>
           <ul style={styles.list}>
@@ -94,7 +84,6 @@ const Footer = () => {
             <li style={styles.text}>24/7 Ambulance</li>
           </ul>
         </div>
-
         <div style={styles.column}>
           <h4 style={styles.heading}>Connect With Us</h4>
           <div style={styles.socialContainer}>
@@ -104,14 +93,12 @@ const Footer = () => {
           </div>
         </div>
       </div>
-
       <div style={styles.bottomBar}>
         © {new Date().getFullYear()} Shri Gurupad Hospital. All Rights Reserved.
       </div>
     </footer>
   );
 };
-
 const styles = {
   footer: {
     background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)",
@@ -187,5 +174,4 @@ const styles = {
     marginTop: "5px",
   },
 };
-
 export default Footer;

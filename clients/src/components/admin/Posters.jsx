@@ -1,178 +1,189 @@
-import { useState } from "react";
-
-function Posters() {
-  const [preview, setPreview] = useState({});
-  const [uploading, setUploading] = useState({});
-  const [refreshKey, setRefreshKey] = useState(Date.now());
-
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+const API = "https://fullstack-mediadmin.onrender.com";
+export default function Posters() {
   const token = localStorage.getItem("token");
-  const API = "https://fullstack-mediadmin.onrender.com";
-
-  const handleFileChange = (index, file) => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreview(prev => ({ ...prev, [index]: { file, url } }));
-  };
-
-  const uploadPoster = async (index) => {
-    if (!preview[index]) return;
-    const formData = new FormData();
-    formData.append("poster", preview[index].file);
-
-    setUploading(prev => ({ ...prev, [index]: true }));
-
+  const [items, setItems] = useState([]);
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API}/api/upload-poster/${index}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      setFetchLoading(true);
+      const res = await fetch(`${API}/api/posters`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      alert(data.message);
-      setRefreshKey(Date.now());
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
+      setItems(data);
+    } catch {
+      toast.error("Failed to load");
     } finally {
-      setUploading(prev => ({ ...prev, [index]: false }));
+      setFetchLoading(false);
     }
   };
-
+  useEffect(() => {
+    fetchData();
+  }, []);
+  const upload = async () => {
+    if (!file) return toast.error("Select file first");
+    try {
+      setLoading(true);
+      const fd = new FormData();
+      fd.append("media", file);
+      const res = await fetch(`${API}/api/posters`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast.success("Uploaded 🚀");
+      setFile(null);
+      fetchData();
+    } catch (err) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const remove = async (id) => {
+    if (!window.confirm("Delete this item?")) return;
+    try {
+      setDeleteLoadingId(id);
+      await fetch(`${API}/api/posters/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Deleted 🗑️");
+      fetchData();
+    } catch {
+      toast.error("Delete failed");
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
   return (
-    <>
-      <h2>Posters</h2>
-
-      <div className="poster-grid">
-        {[1, 2, 3].map((num) => (
-          <div key={num} className="poster-card">
-            <p className="label"><b>Current Poster:</b></p>
-            <img
-              src={`https://res.cloudinary.com/dtazvhqre/image/upload/posters/poster${num}?v=${refreshKey}`}
-              alt={`Poster ${num}`}
-              className="poster-img"
-            />
-
-            <input
-              type="file"
-              className="file-input"
-              onChange={(e) => handleFileChange(num, e.target.files[0])}
-            />
-
-            {preview[num] && (
-              <>
-                <p className="label"><b>Preview:</b></p>
-                <img
-                  src={preview[num].url}
-                  alt="Preview"
-                  className="poster-preview"
-                />
-                <button
-                  className="upload-btn"
-                  onClick={() => uploadPoster(num)}
-                  disabled={uploading[num]}
-                >
-                  {uploading[num] ? "Uploading..." : "Upload"}
-                </button>
-              </>
+    <div style={{ padding: "20px", background: "#f4f7fb", minHeight: "100vh" , overflowX: "hidden" }}>
+      <Toaster />
+      <h2 style={{ marginBottom: "20px" }}>🎬 Posters Dashboard</h2>
+      <div style={{
+        background: "#fff",
+        padding: "20px",
+        borderRadius: "12px",
+        boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
+        marginBottom: "20px"
+      }}>
+        <label style={{
+          display: "block",
+          padding: "20px",
+          border: "2px dashed #ccc",
+          borderRadius: "10px",
+          textAlign: "center",
+          cursor: "pointer"
+        }}>
+          {file ? file.name : "Click or Drag file here"}
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            style={{ display: "none" }}
+          />
+        </label>
+        {file && (
+          <div style={{ marginTop: "10px" }}>
+            {file.type.startsWith("image") ? (
+              <img
+                src={URL.createObjectURL(file)}
+                width="120"
+                style={{ borderRadius: "8px" }}
+              />
+            ) : (
+              <video
+                src={URL.createObjectURL(file)}
+                width="120"
+              />
             )}
           </div>
-        ))}
+        )}
+        <button
+          onClick={upload}
+          disabled={loading}
+          style={{
+            marginTop: "15px",
+            padding: "10px 15px",
+            border: "none",
+            background: "#2563eb",
+            color: "#fff",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
+        >
+          {loading ? "Uploading..." : "Upload"}
+        </button>
       </div>
-
-      <style>{`
-      * {
-  box-sizing: border-box;
-}
-
-body {
-  overflow-x: hidden; /* 🔥 prevents right scroll */
-}
-
-.poster-card {
-  width: 100%;
-}
-        h2 {
-          color: #0f172a;
-          font-size: 24px;
-          margin-bottom: 20px;
-        }
-
-        .poster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 20px;
-}
-
-        .poster-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 16px; /* reduced */
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: 0.3s ease;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden; /* 🔥 KEY FIX */
-}
-
-        .poster-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-        }
-
-        .poster-img,
-.poster-preview {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  margin-bottom: 10px;
-}
-
-        .label {
-          align-self: flex-start;
-          margin-bottom: 6px;
-          color: #334155;
-        }
-
-        .file-input {
-  margin-bottom: 10px;
-  width: 100%;
-  max-width: 100%;
-}
-
-        .upload-btn {
-          padding: 10px 18px;
-          border: none;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #6366f1, #3b82f6);
-          color: white;
-          font-weight: 500;
-          cursor: pointer;
-          transition: 0.2s;
-        }
-
-        .upload-btn:hover {
-          opacity: 0.85;
-        }
-
-        .upload-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 500px) {
-          .poster-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))",
+        gap: "20px"
+      }}>
+        {fetchLoading ? (
+          <p>Loading...</p>
+        ) : items.length === 0 ? (
+          <p>No posters found</p>
+        ) : (
+          items.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                position: "relative"
+              }}
+            >
+              {p.type === "image" ? (
+                <img
+                  src={p.media_url}
+                  style={{
+                    width: "100%",
+                    height: "180px",
+                    objectFit: "cover"
+                  }}
+                />
+              ) : (
+                <video
+                  src={p.media_url}
+                  style={{
+                    width: "100%",
+                    height: "180px",
+                    objectFit: "cover"
+                  }}
+                  controls
+                />
+              )}
+              <button
+                onClick={() => remove(p.id)}
+                disabled={deleteLoadingId === p.id}
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  background: "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "35px",
+                  height: "35px",
+                  cursor: "pointer"
+                }}
+              >
+                {deleteLoadingId === p.id ? "..." : "✕"}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
-
-export default Posters;

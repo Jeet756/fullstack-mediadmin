@@ -1,34 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-
 const Contact = () => {
   const [width, setWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
-
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const isUltraSmall = width <= 245;
-
   const dynamicPadding =
     width <= 200
       ? "12px"
       : width <= 350
       ? "20px"
       : "40px";
-
   return (
     <main style={styles.wrapper}>
       <Helmet>
         <title>Contact | Shri Gurupad Hospital</title>
       </Helmet>
-
-      {/* HERO */}
       <section
         style={{
           ...styles.hero,
@@ -43,7 +36,6 @@ const Contact = () => {
         >
           Contact Us
         </h1>
-
         <p
           style={{
             ...styles.heroSubtitle,
@@ -53,7 +45,6 @@ const Contact = () => {
           We're here to assist you 24/7. Reach out anytime.
         </p>
       </section>
-
       <section style={styles.section}>
         <div
           style={{
@@ -67,7 +58,6 @@ const Contact = () => {
             gap: width <= 300 ? "20px" : "40px",
           }}
         >
-          {/* PHONE CARD */}
           <div
             style={{
               ...styles.card,
@@ -95,8 +85,6 @@ const Contact = () => {
               <li>Emergency 2: 9753545106</li>
             </ul>
           </div>
-
-          {/* EMAIL CARD */}
           <div
             style={{
               ...styles.card,
@@ -125,7 +113,6 @@ const Contact = () => {
             </ul>
           </div>
         </div>
-
         <div style={{ textAlign: "center", marginTop: "50px" }}>
           <Link
             to="/"
@@ -142,41 +129,34 @@ const Contact = () => {
     </main>
   );
 };
-
 const styles = {
   wrapper: {
     fontFamily: "Poppins, sans-serif",
     background: "linear-gradient(135deg, #eef2ff, #f8fafc)",
     overflowX: "hidden",
   },
-
   hero: {
     textAlign: "center",
     background:
       "linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6)",
     color: "#fff",
   },
-
   heroTitle: {
     fontWeight: "800",
     lineHeight: "1.2",
   },
-
   heroSubtitle: {
     marginTop: "15px",
     opacity: 0.9,
   },
-
   section: {
     padding: "60px 15px",
     maxWidth: "1100px",
     margin: "auto",
   },
-
   grid: {
     display: "grid",
   },
-
   card: {
     background: "rgba(255,255,255,0.7)",
     backdropFilter: "blur(16px)",
@@ -186,13 +166,11 @@ const styles = {
     overflow: "hidden",
     border: "1px solid rgba(255,255,255,0.4)",
   },
-
   cardTitle: {
     marginBottom: "15px",
     fontSize: "1.2rem",
     fontWeight: "700",
   },
-
   list: {
     listStyle: "none",
     padding: 0,
@@ -200,13 +178,10 @@ const styles = {
     fontSize: "0.9rem",
     color: "#475569",
   },
-
-  // 🔥 EMAIL FIX
   wrap: {
     wordBreak: "break-word",
     overflowWrap: "anywhere",
   },
-
   backBtn: {
     display: "inline-block",
     borderRadius: "30px",
@@ -216,5 +191,4 @@ const styles = {
     fontWeight: "600",
   },
 };
-
 export default Contact;

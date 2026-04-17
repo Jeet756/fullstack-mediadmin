@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 function Attendance() {
   const [staffUsers, setStaffUsers] = useState([]);
   const [attendance, setAttendance] = useState({});
@@ -11,39 +10,29 @@ function Attendance() {
 const [searchKey, setSearchKey] = useState("firstName");
 const [filteredUsers, setFilteredUsers] = useState([]);
 const [loading, setLoading] = useState(false);
-  // 🔥 FETCH STAFF
  const fetchStaffUsers = async () => {
   try {
     setLoading(true);
-
     const res = await fetch(`${API}/api/staff-users`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
     setStaffUsers(data);
-
   } catch (err) {
     console.error(err);
   } finally {
     setLoading(false);
   }
 };
-
-  // 🔥 FETCH ATTENDANCE BY DATE
   const fetchAttendanceByDate = async (date) => {
   if (!date) return;
-
   try {
     setLoading(true);
-
     const res = await fetch(`${API}/api/attendance/${date}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-
     const data = await res.json();
-
     let updated = {};
-
 staffUsers.forEach(u => {
   updated[u.id] = attendance[u.id] || {
     morning: false,
@@ -52,7 +41,6 @@ staffUsers.forEach(u => {
     status: "not_marked"
   };
 });
-
     if (Array.isArray(data) && data.length > 0) {
       setIsRecorded(true);
     } else {
@@ -60,7 +48,6 @@ staffUsers.forEach(u => {
       setAttendance(updated);
       return;
     }
-
     data.forEach(r => {
   updated[r.user_id] = {
     morning: r.morning || false,
@@ -69,9 +56,7 @@ staffUsers.forEach(u => {
     status: r.status || "not_marked"
   };
 });
-
     setAttendance(updated);
-
   } catch (err) {
     console.error(err);
     alert("Failed to load attendance");
@@ -79,17 +64,12 @@ staffUsers.forEach(u => {
     setLoading(false);
   }
 };
-
-  // 🔥 SAVE
   const saveAttendance = async () => {
     if (!attendanceDate) return alert("Select date first");
-
     const records = staffUsers
   .filter(u => {
   const user = attendance[u.id];
   if (!user) return false;
-
-  // ❌ skip not marked users
   if (
     !user.morning &&
     !user.afternoon &&
@@ -98,14 +78,11 @@ staffUsers.forEach(u => {
   ) {
     return false;
   }
-
   return true;
 })
   .map(u => {
     const user = attendance[u.id];
-
     let status = user.status;
-
     if (!status) {
   if (user.morning || user.afternoon || user.night) {
     status = "present";
@@ -113,7 +90,6 @@ staffUsers.forEach(u => {
     status = "not_marked";
   }
 }
-
     return {
       user_id: u.id,
       morning: user.morning || false,
@@ -133,48 +109,36 @@ if (records.length === 0) {
       },
       body: JSON.stringify({ date: attendanceDate, records })
     });
-
     const data = await res.json();
     alert(data.message);
     setIsRecorded(true);
   };
-
   useEffect(() => {
     fetchStaffUsers();
   }, []);
   useEffect(() => {
   const q = search.toLowerCase();
-
   setFilteredUsers(
     staffUsers.filter((u) => {
-
-      // 👇 full name support
       if (searchKey === "fullName") {
         return `${u.firstName} ${u.lastName}`
           .toLowerCase()
           .includes(q);
       }
-
       const value = u[searchKey];
       if (!value) return false;
-
       return value.toString().toLowerCase().includes(q);
     })
   );
 }, [search, searchKey, staffUsers]);
-
-
-  // 🔥 RUN WHEN DATE OR USERS CHANGE
   useEffect(() => {
     if (staffUsers.length > 0 && attendanceDate) {
       fetchAttendanceByDate(attendanceDate);
     }
   }, [attendanceDate, staffUsers]);
-
   return (
     <>
       <h2>Attendance</h2>
-
       <input
   type="date"
   value={attendanceDate}
@@ -198,8 +162,6 @@ if (records.length === 0) {
       marginTop: "10px"
     }}
   >
-
-    
     <select
       value={searchKey}
       onChange={(e) => {
@@ -218,7 +180,6 @@ if (records.length === 0) {
       <option value="email">Email</option>
       <option value="phone">Phone</option>
     </select>
-
     <input
       type="text"
       placeholder={`Search ${searchKey}`}
@@ -234,13 +195,11 @@ if (records.length === 0) {
     />
   </div>
 )}
-{/* 👇 YE ADD KARNA HAI */}
 {attendanceDate && (
   <p style={{ marginTop: "5px", fontWeight: "bold" }}>
     {isRecorded ? "✅ Attendance Recorded" : "❌ Not Recorded"}
   </p>
 )}
-      {/* 🔥 SCROLLABLE CONTAINER */}
       <div
         style={{
           maxHeight: "400px",
@@ -264,7 +223,6 @@ if (records.length === 0) {
   {u.email} | {u.phone}
 </div>
             <div>
-  {/* MORNING */}
   <label>
     <input
       type="checkbox"
@@ -272,15 +230,11 @@ if (records.length === 0) {
       onChange={() => {
   setAttendance(prev => {
     const user = prev[u.id] || {};
-
     const selectedCount =
       (user.morning ? 1 : 0) +
       (user.afternoon ? 1 : 0) +
       (user.night ? 1 : 0);
-
-    // ❌ last selected hai → uncheck mat hone de
     if (user.morning && selectedCount === 1) return prev;
-
     return {
       ...prev,
       [u.id]: {
@@ -294,8 +248,6 @@ if (records.length === 0) {
     />
     Morning
   </label>
-
-  {/* AFTERNOON */}
   <label style={{ marginLeft: "10px" }}>
     <input
       type="checkbox"
@@ -303,14 +255,11 @@ if (records.length === 0) {
       onChange={() => {
   setAttendance(prev => {
     const user = prev[u.id] || {};
-
     const selectedCount =
       (user.morning ? 1 : 0) +
       (user.afternoon ? 1 : 0) +
       (user.night ? 1 : 0);
-
     if (user.afternoon && selectedCount === 1) return prev;
-
     return {
       ...prev,
       [u.id]: {
@@ -324,8 +273,6 @@ if (records.length === 0) {
     />
     Afternoon
   </label>
-
-  {/* NIGHT */}
   <label style={{ marginLeft: "10px" }}>
     <input
       type="checkbox"
@@ -333,14 +280,11 @@ if (records.length === 0) {
       onChange={() => {
   setAttendance(prev => {
     const user = prev[u.id] || {};
-
     const selectedCount =
       (user.morning ? 1 : 0) +
       (user.afternoon ? 1 : 0) +
       (user.night ? 1 : 0);
-
     if (user.night && selectedCount === 1) return prev;
-
     return {
       ...prev,
       [u.id]: {
@@ -354,8 +298,6 @@ if (records.length === 0) {
     />
     Night
   </label>
-
-  {/* ABSENT */}
   <label style={{ marginLeft: "10px" }}>
     <input
       type="checkbox"
@@ -374,8 +316,6 @@ if (records.length === 0) {
     />
     Absent
   </label>
-
-  {/* NOT MARKED */}
   <label style={{ marginLeft: "10px" }}>
     <input
       type="checkbox"
@@ -398,7 +338,6 @@ if (records.length === 0) {
           </div>
         ))}
       </div>
-
       <button
   style={{ marginTop: "10px" }}
   onClick={saveAttendance}
@@ -413,5 +352,4 @@ if (records.length === 0) {
     </>
   );
 }
-
 export default Attendance;

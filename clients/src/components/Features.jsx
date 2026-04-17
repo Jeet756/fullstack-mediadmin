@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-
 function Features() {
   const [width, setWidth] = useState(window.innerWidth);
-
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const features = [
     { icon: "👩‍⚕️", title: "Obstetrics & Gynecology Specialist", desc: "Comprehensive care for women’s health including prenatal and reproductive services delivered by expert specialists." },
     { icon: "👶", title: "Pediatric Care", desc: "Dedicated child healthcare services offering preventive and diagnostic support for infants and children." },
@@ -29,19 +26,16 @@ function Features() {
     { icon: "📷", title: "C-Arm Imaging", desc: "Real-time imaging assistance for minimally invasive surgeries." },
     { icon: "🏨", title: "OPD", desc: "Efficient outpatient services for consultations and follow-ups." }
   ];
-
   const dynamicPadding =
     width <= 200
       ? "15px"
       : width <= 350
       ? "20px"
       : "30px";
-
   return (
     <>
       <style>{`
         * { box-sizing: border-box; }
-
         .features-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #eef2ff, #f8fafc);
@@ -49,7 +43,6 @@ function Features() {
           font-family: 'Poppins', sans-serif;
           overflow-x: hidden;
         }
-
         .heading {
           text-align: center;
           font-size: 34px;
@@ -57,22 +50,18 @@ function Features() {
           margin-bottom: 50px;
           color: #0f172a;
         }
-
         .grid {
           display: grid;
           gap: 30px;
           max-width: 1200px;
           margin: auto;
         }
-
         @media (min-width: 600px) {
           .grid { grid-template-columns: repeat(2, 1fr); }
         }
-
         @media (min-width: 992px) {
           .grid { grid-template-columns: repeat(3, 1fr); }
         }
-
         .card {
           background: rgba(255,255,255,0.7);
           backdrop-filter: blur(16px);
@@ -84,30 +73,25 @@ function Features() {
           cursor: pointer;
           overflow: hidden;
         }
-
         .card:hover {
           transform: translateY(-10px) scale(1.03);
           box-shadow: 0 25px 60px rgba(37,99,235,0.25);
         }
-
         .icon {
           font-size: 40px;
           margin-bottom: 15px;
         }
-
         .title {
           font-size: 16px;
           font-weight: 700;
           margin-bottom: 10px;
           color: #1e293b;
         }
-
         .desc {
           font-size: 14px;
           color: #475569;
           line-height: 1.6;
         }
-
         @media (max-width: 272px) {
           .title { font-size: 13px; }
           .desc { font-size: 12px; }
@@ -121,7 +105,6 @@ function Features() {
   }
 }
       `}</style>
-
       <div className="features-page">
         <Helmet>
           <title>Hospital Services & Facilities | Advanced Medical Care</title>
@@ -130,9 +113,7 @@ function Features() {
             content="Explore our hospital services including gynecology, orthopedics, ICU, emergency care, physiotherapy, and advanced diagnostics." 
           />
         </Helmet>
-
         <h1 className="heading">Hospital Services & Facilities</h1>
-
         <div className="grid">
           {features.map((item, index) => (
             <div
@@ -150,5 +131,4 @@ function Features() {
     </>
   );
 }
-
 export default Features;

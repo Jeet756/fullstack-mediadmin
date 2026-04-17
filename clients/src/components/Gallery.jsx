@@ -1,53 +1,41 @@
 import { useEffect, useState } from "react";
-
-const API = "https://fullstack-mediadmin.onrender.com";
-
 function Gallery() {
   const [images, setImages] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(true); // 🔥 NEW
-  const [error, setError] = useState(null); // 🔥 NEW
-
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null); 
   useEffect(() => {
-    fetch(`${API}/api/gallery?sort=newest`)
-      .then((res) => res.json())
-      .then((data) => {
-        setImages(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to load images");
-        setLoading(false);
-      });
+    const JSON_URL = "https://raw.githubusercontent.com/jeet756/mediadmin-data/main/gallery.json?v=" + Date.now();
+fetch(JSON_URL)
+  .then((res) => res.json())
+  .then((data) => {
+    setImages(data);
+    setLoading(false);
+  })
+  .catch((err) => {
+    console.error(err);
+    setError("Failed to load images");
+    setLoading(false);
+  });
   }, []);
-
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>✨ Our Gallery</h2>
-
-      {/* 🔥 LOADING STATE */}
       {loading && (
         <div style={styles.centerBox}>
           <p style={styles.loadingText}>Loading images...</p>
         </div>
       )}
-
-      {/* 🔥 ERROR STATE */}
       {!loading && error && (
         <div style={styles.centerBox}>
           <p style={{ color: "red" }}>{error}</p>
         </div>
       )}
-
-      {/* 🔥 EMPTY STATE */}
       {!loading && !error && images.length === 0 && (
         <div style={styles.centerBox}>
           <p>No images found</p>
         </div>
       )}
-
-      {/* GRID */}
       {!loading && !error && images.length > 0 && (
         <div style={styles.grid}>
           {images.map((img, i) => (
@@ -56,8 +44,11 @@ function Gallery() {
               style={styles.card}
               onClick={() => setSelected(i)}
             >
-              <img src={img.image_url} style={styles.image} />
-
+              {img.type === "video" ? (
+  <video src={img.media_url} style={styles.image} controls />
+) : (
+  <img src={img.media_url} style={styles.image} />
+)}
               <div style={styles.overlay}>
                 <p style={styles.caption}>{img.caption}</p>
               </div>
@@ -65,14 +56,11 @@ function Gallery() {
           ))}
         </div>
       )}
-
-      {/* LIGHTBOX */}
       {selected !== null && (
         <div style={styles.lightbox}>
           <span style={styles.close} onClick={() => setSelected(null)}>
             ✕
           </span>
-
           <span
             style={styles.arrowLeft}
             onClick={() =>
@@ -83,12 +71,19 @@ function Gallery() {
           >
             ‹
           </span>
-
-          <img
-            src={images[selected].image_url}
-            style={styles.lightImage}
-          />
-
+          {images[selected].type === "video" ? (
+  <video
+    src={images[selected].media_url}
+    style={styles.lightImage}
+    controls
+    autoPlay
+  />
+) : (
+  <img
+    src={images[selected].media_url}
+    style={styles.lightImage}
+  />
+)}
           <span
             style={styles.arrowRight}
             onClick={() =>
@@ -99,7 +94,6 @@ function Gallery() {
           >
             ›
           </span>
-
           <p style={styles.lightCaption}>
             {images[selected].caption}
           </p>
@@ -108,7 +102,6 @@ function Gallery() {
     </div>
   );
 }
-
 const styles = {
   container: {
     padding: "40px 10px",
@@ -117,32 +110,27 @@ const styles = {
     textAlign: "center",
     overflowX: "hidden",
   },
-
   heading: {
     fontSize: "32px",
     marginBottom: "30px",
     fontWeight: "bold",
     color: "#333",
   },
-
   centerBox: {
     height: "200px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
-
   loadingText: {
     fontSize: "18px",
     color: "#555",
   },
-
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
     gap: "12px",
   },
-
   card: {
     position: "relative",
     overflow: "hidden",
@@ -155,14 +143,12 @@ const styles = {
     justifyContent: "center",
     minWidth: 0,
   },
-
   image: {
     width: "100%",
     height: "200px",
     objectFit: "contain",
     background: "#fff",
   },
-
   overlay: {
     position: "absolute",
     bottom: 0,
@@ -174,12 +160,10 @@ const styles = {
     opacity: 0,
     transition: "0.3s",
   },
-
   caption: {
     margin: 0,
     fontSize: "14px",
   },
-
   lightbox: {
     position: "fixed",
     top: 0,
@@ -193,14 +177,12 @@ const styles = {
     flexDirection: "column",
     zIndex: 9999,
   },
-
   lightImage: {
     maxWidth: "95%",
     maxHeight: "85%",
     objectFit: "contain",
     borderRadius: "10px",
   },
-
   close: {
     position: "fixed",
     top: "20px",
@@ -213,7 +195,6 @@ const styles = {
     cursor: "pointer",
     zIndex: 10000,
   },
-
   arrowLeft: {
     position: "absolute",
     left: "30px",
@@ -221,7 +202,6 @@ const styles = {
     color: "#fff",
     cursor: "pointer",
   },
-
   arrowRight: {
     position: "absolute",
     right: "30px",
@@ -229,11 +209,9 @@ const styles = {
     color: "#fff",
     cursor: "pointer",
   },
-
   lightCaption: {
     color: "#ddd",
     marginTop: "15px",
   },
 };
-
 export default Gallery;

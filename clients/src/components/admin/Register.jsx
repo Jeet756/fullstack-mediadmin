@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-
 function Register() {
   const navigate = useNavigate();
   const [data, setData] = useState({
@@ -13,15 +12,12 @@ function Register() {
     password: "",
     role: "",
   });
-
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-
     try {
       const res = await fetch(
         "https://fullstack-mediadmin.onrender.com/api/register",
@@ -34,10 +30,8 @@ function Register() {
           body: JSON.stringify(data),
         }
       );
-
       const result = await res.json();
       if (!res.ok) return alert(result.message);
-
       alert(result.message);
       setData({
         firstName: "",
@@ -53,17 +47,14 @@ function Register() {
       alert("Registration failed");
     }
   };
-
   return (
     <>
       <Helmet>
         <title>Register User | Shri Gurupad Hospital</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-
       <div className="reg-container">
         <h2>Register New User</h2>
-
         <form className="reg-form" onSubmit={handleSubmit}>
           <input
             type="text"
@@ -118,11 +109,9 @@ function Register() {
             <option value="staff">Staff</option>
             <option value="patient">Patient</option>
           </select>
-
           <button type="submit">Register</button>
         </form>
       </div>
-
       <style>{`
         .reg-container {
           max-width: 500px;
@@ -134,20 +123,17 @@ function Register() {
           box-shadow: 0 10px 25px rgba(0,0,0,0.1);
           border: 1px solid rgba(255,255,255,0.4);
         }
-
         .reg-container h2 {
           text-align: center;
           font-size: 22px;
           margin-bottom: 25px;
           color: #0f172a;
         }
-
         .reg-form {
           display: flex;
           flex-direction: column;
           gap: 15px;
         }
-
         .reg-form input,
         .reg-form select {
           padding: 12px 15px;
@@ -157,13 +143,11 @@ function Register() {
           font-size: 14px;
           transition: 0.2s;
         }
-
         .reg-form input:focus,
         .reg-form select:focus {
           border-color: #6366f1;
           box-shadow: 0 0 5px rgba(99,102,241,0.3);
         }
-
         .reg-form button {
           padding: 12px 18px;
           border: none;
@@ -174,11 +158,9 @@ function Register() {
           font-weight: 500;
           transition: 0.2s;
         }
-
         .reg-form button:hover {
           opacity: 0.85;
         }
-
         @media (max-width: 600px) {
           .reg-container {
             padding: 20px;
@@ -189,5 +171,4 @@ function Register() {
     </>
   );
 }
-
 export default Register;

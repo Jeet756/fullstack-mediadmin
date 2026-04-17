@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 export default function ContributorsAdmin() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
@@ -10,7 +9,6 @@ const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
   const [fetchLoading, setFetchLoading] = useState(true);
-
   const fetchData = async () => {
     try {
       setFetchLoading(true);
@@ -23,28 +21,21 @@ const [preview, setPreview] = useState(null);
       setFetchLoading(false);
     }
   };
-
   useEffect(() => {
   fetchData();
 }, []);
-
-// 🔥 YAHAN ADD KAR
 useEffect(() => {
   return () => {
     if (preview) URL.revokeObjectURL(preview);
   };
 }, [preview]);
-
   const handleAdd = async () => {
     if (!name) return alert("Name required");
-
     try {
       setLoading(true);
-
       const formData = new FormData();
       formData.append("name", name);
       if (image) formData.append("image", image);
-
       await fetch(`${API}/api/contributors`, {
         method: "POST",
         headers: {
@@ -52,10 +43,9 @@ useEffect(() => {
         },
         body: formData
       });
-
       setName("");
 setImage(null);
-setPreview(null); // 🔥 YE ADD KAR
+setPreview(null); 
 fetchData();
     } catch (err) {
       alert("Error adding contributor");
@@ -63,18 +53,15 @@ fetchData();
       setLoading(false);
     }
   };
-
   const handleDelete = async (id) => {
     try {
       setDeleteLoadingId(id);
-
       await fetch(`${API}/api/contributors/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-
       fetchData();
     } catch {
       alert("Delete failed");
@@ -82,7 +69,6 @@ fetchData();
       setDeleteLoadingId(null);
     }
   };
-
   const inputStyle = {
     width: "100%",
     padding: "10px",
@@ -90,7 +76,6 @@ fetchData();
     borderRadius: "6px",
     border: "1px solid #ccc"
   };
-
   const primaryBtn = {
     background: "#2563eb",
     color: "#fff",
@@ -100,7 +85,6 @@ fetchData();
     cursor: "pointer",
     marginTop: "10px"
   };
-
   const deleteBtn = {
     background: "#ef4444",
     color: "#fff",
@@ -109,7 +93,6 @@ fetchData();
     borderRadius: "5px",
     cursor: "pointer"
   };
-
   return (
     <div style={{ padding: "20px", background: "#f5f7fb", minHeight: "100vh" }}>
       <h2 style={{
@@ -119,8 +102,6 @@ fetchData();
       }}>
         Contributors Management
       </h2>
-
-      {/* FORM */}
       <div
         style={{
           background: "#fff",
@@ -131,14 +112,12 @@ fetchData();
         }}
       >
         <h3>Add Contributor</h3>
-
         <input
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={inputStyle}
         />
-
         <label style={{
           display: "block",
           width: "100%",
@@ -151,13 +130,11 @@ fetchData();
           marginTop: "10px"
         }}>
           {image ? image.name : "Choose Image"}
-
           <input
             type="file"
             onChange={(e) => {
   const file = e.target.files[0];
   setImage(file);
-
   if (file) {
     setPreview(URL.createObjectURL(file));
   }
@@ -166,8 +143,6 @@ fetchData();
             style={{ display: "none" }}
           />
         </label>
-
-        {/* IMAGE PREVIEW */}
         {preview && (
   <img
     src={preview}
@@ -176,13 +151,10 @@ fetchData();
     style={{ marginTop: "10px", borderRadius: "6px" }}
   />
 )}
-
         <button onClick={handleAdd} style={primaryBtn} disabled={loading}>
           {loading ? "Adding..." : "Add"}
         </button>
       </div>
-
-      {/* LIST */}
       {fetchLoading ? (
         <p style={{ textAlign: "center", color: "#777" }}>
           Loading contributors...
@@ -208,18 +180,15 @@ fetchData();
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
     }}
   >
-    {/* 🔥 IMAGE ADD KAR */}
     <img
   src={c.image_url || "https://via.placeholder.com/80"}
   onError={(e) => (e.target.src = "https://via.placeholder.com/80")}
   width="80"
   style={{ borderRadius: "8px", flexShrink: 0 }}
 />
-
     <div style={{ flex: "1" }}>
       <h4 style={{ margin: 0 }}>{c.name}</h4>
     </div>
-
     <button
       onClick={() => {
         if (window.confirm("Delete this contributor?")) {

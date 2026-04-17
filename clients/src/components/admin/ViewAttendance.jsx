@@ -4,24 +4,17 @@ import { saveAs } from "file-saver";
 export default function ViewAttendance() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
-
   const [mode, setMode] = useState("user");
   const [searchKey, setSearchKey] = useState("email");
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
-
-
-  // USER MODE
 const [userFrom, setUserFrom] = useState("");
 const [userTo, setUserTo] = useState("");
 const [userData, setUserData] = useState([]);
 const [userSummary, setUserSummary] = useState(null);
-
-// ALL MODE
 const [allFrom, setAllFrom] = useState("");
 const [allTo, setAllTo] = useState("");
 const [allData, setAllData] = useState([]);
-
 const fetchUserAttendance = async () => {
   setLoading(true);
   try {
@@ -37,7 +30,6 @@ const fetchUserAttendance = async () => {
   }
   setLoading(false);
 };
-
   const fetchAllStats = async () => {
   setLoading(true);
   try {
@@ -54,20 +46,15 @@ const fetchUserAttendance = async () => {
 };
 const downloadExcel = () => {
   const currentData = mode === "user" ? userData : allData;
-
 if (currentData.length === 0) {
   return alert("No data to export");
 }
-
   let excelData = [];
-
   if (mode === "user") {
   excelData = userData.map((d) => ({
       Date: new Date(d.date).toLocaleDateString("en-GB"),
       Status: `${d.status} (M:${d.morning ? "1":"0"} A:${d.afternoon ? "1":"0"} N:${d.night ? "1":"0"})`,
     }));
-
-    // summary add
     if (userSummary) {
       excelData.push({});
       excelData.push({
@@ -99,32 +86,27 @@ excelData.push({
   Status: userSummary.night,
 });
     }
-
   } else {
   excelData = allData.map((u) => ({
   Name: u.name,
   Morning: u.morning,
   Afternoon: u.afternoon,
   Night: u.night,
-  Present: u.present, // ✅ ADD
+  Present: u.present, 
   Absent: u.absent,
   "Not Marked": u.notMarked,
 }));
 }
-
   const worksheet = XLSX.utils.json_to_sheet(excelData);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-
   const excelBuffer = XLSX.write(workbook, {
     bookType: "xlsx",
     type: "array",
   });
-
   const file = new Blob([excelBuffer], {
     type: "application/octet-stream",
   });
-
   const fileName = mode === "user"
   ? `attendance_${userFrom}_to_${userTo}.xlsx`
   : `attendance_${allFrom}_to_${allTo}.xlsx`;
@@ -140,13 +122,9 @@ excelData.push({
     fetchAllStats();
   }
 };
-
- 
-
   const deleteAllAttendance = async () => {
     if (!allFrom || !allTo) return alert("Select date range");
     if (!window.confirm("⚠️ Delete ALL attendance within this date?")) return;
-
     await fetch(`${API}/api/attendance/all`, {
       method: "DELETE",
       headers: {
@@ -155,15 +133,12 @@ excelData.push({
       },
       body: JSON.stringify({ from: allFrom, to: allTo }),
     });
-
     alert("Deleted all");
   };
-
   return (
     <>
       <style>{`
         .app-container { padding: 10px; }
-
         .header {
           display: flex;
           justify-content: space-between;
@@ -171,17 +146,14 @@ excelData.push({
           flex-wrap: wrap;
           margin-bottom: 20px;
         }
-
         .header h2 {
           font-size: 24px;
           color: #1e293b;
         }
-
         .toggle {
           display: flex;
           gap: 10px;
         }
-
         .toggle button {
           padding: 8px 14px;
           border-radius: 20px;
@@ -189,12 +161,10 @@ excelData.push({
           cursor: pointer;
           background: #e2e8f0;
         }
-
         .active {
           background: linear-gradient(135deg, #3b82f6, #6366f1);
           color: white;
         }
-
         .search-box {
           padding: 10px 15px;
           border-radius: 25px;
@@ -203,13 +173,11 @@ excelData.push({
           width: 100%;
           min-width: 0;
         }
-
         .grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
           gap: 20px;
         }
-
         .card {
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(12px);
@@ -219,28 +187,23 @@ excelData.push({
           border: 1px solid rgba(255,255,255,0.4);
           transition: 0.3s ease;
         }
-
         .card:hover {
           transform: translateY(-5px);
         }
-
         .badge-green {
           color: #16a34a;
           font-weight: 600;
         }
-
         .badge-red {
           color: #dc2626;
           font-weight: 600;
         }
-
         .summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
   margin-top: 20px;
 }
-
         .summary div {
   padding: 10px;
   border-radius: 10px;
@@ -248,11 +211,9 @@ excelData.push({
   font-weight: 600;
   word-wrap: break-word;
 }
-
         .green { background: #dcfce7; }
         .red { background: #fee2e2; }
         .yellow { background: #fef9c3; }
-
         .btn {
           padding: 10px 15px;
           border-radius: 10px;
@@ -261,7 +222,6 @@ excelData.push({
           background: linear-gradient(135deg, #3b82f6, #6366f1);
           color: white;
         }
-
         .delete-btn {
           padding: 10px 15px;
           border: none;
@@ -271,22 +231,18 @@ excelData.push({
           cursor: pointer;
           font-weight: 500;
         }
-
         .delete-btn:hover {
           opacity: 0.85;
         }
-
         .empty {
           text-align: center;
           padding: 40px;
           color: #64748b;
         }
       `}</style>
-
       <div className="app-container">
         <div className="header">
           <h2>Attendance</h2>
-
           <div className="toggle">
             <button
               className={mode === "user" ? "active" : ""}
@@ -302,10 +258,7 @@ excelData.push({
             </button>
           </div>
         </div>
-
-        {/* FILTERS */}
        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
-
   {mode === "user" && (
     <>
       <select
@@ -319,7 +272,6 @@ excelData.push({
         <option value="lastName">Last Name</option>
         <option value="fullName">Full Name</option>
       </select>
-
       <input
         type="text"
         placeholder={
@@ -333,8 +285,6 @@ excelData.push({
       />
     </>
   )}
-
-  {/* Date inputs */}
   {mode === "user" ? (
     <>
       <input
@@ -366,27 +316,20 @@ excelData.push({
       />
     </>
   )}
-
 </div>
-
-        {/* ACTIONS */}
        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
   <button className="btn" onClick={handleSearch}>
     🔍 Search
   </button>
-
   <button className="btn" onClick={downloadExcel}>
     ⬇️ Download Excel
   </button>
-
   {mode === "all" && (
     <button className="delete-btn" onClick={deleteAllAttendance}>
       ⚠️ Delete All
     </button>
   )}
 </div>
-
-        {/* RESULT */}
         {loading ? (
           <div className="empty">Loading...</div>
         ) : (mode === "user" ? userData : allData).length === 0 ? (
@@ -407,7 +350,6 @@ excelData.push({
         month: "short",
         year: "numeric"
       });
-
       return (
         <div
           key={i}
@@ -419,9 +361,7 @@ excelData.push({
           }}
         >
           <span>{formattedDate}</span>
-
          <div style={{ display: "flex", gap: "10px", fontSize: "13px" }}>
-  
   {d.status === "present" && (
     <>
       {d.morning && <span>Mor: ✔️</span>}
@@ -429,24 +369,20 @@ excelData.push({
       {d.night && <span>Nyt: ✔️</span>}
     </>
   )}
-
   {d.status === "absent" && (
     <span style={{ color: "#dc2626", fontWeight: "600" }}>
       Absent
     </span>
   )}
-
   {d.status === "not_marked" && (
     <span style={{ color: "#eab308", fontWeight: "600" }}>
       Not Marked
     </span>
   )}
-
 </div>
         </div>
       );
     })}
-
 {mode === "all" && allData.map((u, i) => (
     <div
       key={i}
@@ -456,12 +392,11 @@ excelData.push({
       }}
     >
       <b>{u.name}</b>
-
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "5px" }}>
         <span>Mor: {u.morning}</span>
 <span>Aft: {u.afternoon}</span>
 <span>Nyt: {u.night}</span>
-<span style={{ color: "green" }}>Pre: {u.present}</span> {/* ✅ ADD */}
+<span style={{ color: "green" }}>Pre: {u.present}</span> 
 <span style={{ color: "red" }}>Abs: {u.absent}</span>
 <span style={{ color: "orange" }}>Not Marked: {u.notMarked}</span>
       </div>
@@ -469,13 +404,11 @@ excelData.push({
   ))}
 </div>
         )}
-
         {mode === "user" && userSummary &&  (
   <div className="summary">
   <div className="green">Present: {userSummary.present}</div>
   <div className="red">Absent: {userSummary.absent}</div>
   <div className="yellow">Not Recorded: {userSummary.notRecorded}</div>
-
   <div className="green">Morning: {userSummary.morning}</div>
   <div className="green">Afternoon: {userSummary.afternoon}</div>
   <div className="green">Night: {userSummary.night}</div>

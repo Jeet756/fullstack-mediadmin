@@ -3,16 +3,12 @@ function PatientDashboard() {
   const handleLogout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
-
   window.dispatchEvent(new Event("authChanged"));
-
   window.location.href = "/login";
 };
-
   return (
     <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Welcome to Patient Dashboard</h1>
-
       <button
         onClick={handleLogout}
         style={{
@@ -30,5 +26,4 @@ function PatientDashboard() {
     </div>
   );
 }
-
 export default PatientDashboard;
