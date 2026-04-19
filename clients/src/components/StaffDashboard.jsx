@@ -190,14 +190,17 @@ const isAllowed = (slot) => {
     year: "numeric",
   })}
 </p>
-  <button
+ <button
   style={primaryBtn}
-  disabled={!isAllowed("morning") || todayAttendance?.morning}
-  title={!isAllowed("morning") ? "Allowed only 7–8:30 AM" : ""}
+  disabled={todayAttendance?.morning}
   onClick={() => markAttendance("morning")}
 >
   🌅 Morning (7 - 8:30)
 </button>
+
+{!isAllowed("morning") && (
+  <p style={{ color: "red" }}>⛔ Time over</p>
+)}
 
 <button
   style={{ ...primaryBtn, marginLeft: "10px" }}
