@@ -19,8 +19,10 @@ useEffect(() => {
       });
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        setTodayAttendance(data[0]);
-      }
+  setTodayAttendance(data[0]);
+} else {
+  setTodayAttendance({});
+}
     } catch {}
   };
   fetchToday();
@@ -28,8 +30,8 @@ useEffect(() => {
 
   const [todayAttendance, setTodayAttendance] = useState(null);
   const fetchData = async (customFrom, customTo) => {
-  const f = customFrom || from;
-  const t = customTo || to;
+  const f = typeof customFrom === "string" ? customFrom : from;
+  const t = typeof customTo === "string" ? customTo : to;
 
   if (!f || !t) return;
 
@@ -172,7 +174,7 @@ const isAllowed = (slot) => {
           onChange={(e) => setTo(e.target.value)}
           style={inputStyle}
         />
-        <button style={primaryBtn} onClick={fetchData}>
+        <button style={primaryBtn} onClick={() => fetchData()}>
           🔍 Search
         </button>
         <button style={secondaryBtn} onClick={downloadExcel}>
