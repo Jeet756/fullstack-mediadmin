@@ -1,7 +1,7 @@
-import { useState } from "react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Helmet } from "react-helmet-async";
+import { useState, useEffect } from "react";
 function StaffDashboard() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
@@ -9,28 +9,106 @@ function StaffDashboard() {
   const [loading, setLoading] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const fetchData = async () => {
-    if (!from || !to) return alert("Select date range");
-    if (new Date(from) > new Date(to))
-      return alert("Invalid date range");
-    setLoading(true);
+
+useEffect(() => {
+  const fetchToday = async () => {
     try {
-      const res = await fetch(
-        `${API}/api/my-attendance?from=${from}&to=${to}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const result = await res.json();
-      if (!res.ok) {
-        alert(result.message || "Error");
-        setData([]);
-      } else {
-        setData(Array.isArray(result) ? result : []);
+      const today = new Date().toISOString().split("T")[0];
+      const res = await fetch(`${API}/api/my-attendance?from=${today}&to=${today}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setTodayAttendance(data[0]);
       }
-    } catch {
-      alert("Error fetching data");
-    }
-    setLoading(false);
+    } catch {}
   };
+  fetchToday();
+}, []);
+
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const fetchData = async (customFrom, customTo) => {
+  const f = customFrom || from;
+  const t = customTo || to;
+
+  if (!f || !t) return;
+
+  setLoading(true);
+
+  try {
+    const res = await fetch(
+      `${API}/api/my-attendance?from=${f}&to=${t}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message || "Error");
+      setData([]);
+    } else {
+      setData(Array.isArray(result) ? result : []);
+    }
+  } catch {
+    alert("Error fetching data");
+  }
+
+  setLoading(false);
+};
+  const getMinutes = () => {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+};
+
+const isAllowed = (slot) => {
+  const t = getMinutes();
+  const map = {
+    morning: [420, 510],
+    afternoon: [780, 870],
+    night: [1140, 1230],
+  };
+  const [s, e] = map[slot];
+  return t >= s && t <= e;
+};
+ const markAttendance = async (slot) => {
+  try {
+    setLoading(true); // 🔥 UX improve (button click pe loader)
+
+    const res = await fetch(`${API}/api/self-attendance`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ slot })
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message || "Failed to mark attendance");
+      return;
+    }
+
+    alert(result.message || "Attendance marked");
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // 🔥 Direct fresh data fetch (state delay issue avoid)
+    await fetchData(today, today);
+
+    // 🔥 also update today's attendance state (buttons disable ke liye)
+    setTodayAttendance(prev => ({
+  ...(prev || {}),
+  [slot]: true
+}));
+
+  } catch (err) {
+    alert("Error while marking attendance");
+  } finally {
+    setLoading(false);
+  }
+};
   const downloadExcel = () => {
     if (!data.length) return alert("No data");
     const excelData = data.map((d) => ({
@@ -101,6 +179,42 @@ function StaffDashboard() {
           ⬇️ Export
         </button>
       </div>
+      <div style={{ marginTop: "20px" }}>
+  <h3>📅 Aaj ki attendance</h3>
+<p style={{ marginBottom: "10px", color: "#475569" }}>
+  Today: {new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })}
+</p>
+  <button
+  style={primaryBtn}
+  disabled={!isAllowed("morning") || todayAttendance?.morning}
+  title={!isAllowed("morning") ? "Allowed only 7–8:30 AM" : ""}
+  onClick={() => markAttendance("morning")}
+>
+  🌅 Morning (7 - 8:30)
+</button>
+
+<button
+  style={{ ...primaryBtn, marginLeft: "10px" }}
+  disabled={!isAllowed("afternoon") || todayAttendance?.afternoon}
+  title={!isAllowed("afternoon") ? "Allowed only 1–2:30 PM" : ""}
+  onClick={() => markAttendance("afternoon")}
+>
+  🌞 Afternoon (1 - 2:30)
+</button>
+
+<button
+  style={{ ...primaryBtn, marginLeft: "10px" }}
+  disabled={!isAllowed("night") || todayAttendance?.night}
+  title={!isAllowed("night") ? "Allowed only 7–8:30 PM" : ""}
+  onClick={() => markAttendance("night")}
+>
+  🌙 Night (7 - 8:30)
+</button>
+</div>
       <div
         style={{
           marginTop: "20px",

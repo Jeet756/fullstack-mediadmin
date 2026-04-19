@@ -1850,6 +1850,80 @@ app.post("/api/attendance", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+app.post("/api/self-attendance", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (req.user.role !== "staff") {
+      return res.status(403).json({ message: "Staff only" });
+    }
+
+    const { slot } = req.body;
+    if (!["morning", "afternoon", "night"].includes(slot)) {
+      return res.status(400).json({ message: "Invalid slot" });
+    }
+
+    const now = new Date();
+    const totalMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const timeWindows = {
+      morning: [420, 510],
+      afternoon: [780, 870],
+      night: [1140, 1230],
+    };
+
+    const [start, end] = timeWindows[slot];
+
+    if (totalMinutes < start || totalMinutes > end) {
+      return res.status(400).json({
+        message: `⛔ ${slot} window closed`
+      });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const existing = await pool.query(
+      "SELECT * FROM attendance WHERE user_id=$1 AND date=$2",
+      [userId, today]
+    );
+
+    if (existing.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO attendance(user_id,date,morning,afternoon,night,status)
+         VALUES($1,$2,$3,$4,$5,$6)`,
+        [
+          userId,
+          today,
+          slot === "morning",
+          slot === "afternoon",
+          slot === "night",
+          "present"
+        ]
+      );
+    } else {
+      const record = existing.rows[0];
+
+      if (record[slot]) {
+        return res.status(400).json({
+          message: `Already marked ${slot}`
+        });
+      }
+
+      await pool.query(
+        `UPDATE attendance
+         SET ${slot}=true, status='present'
+         WHERE user_id=$1 AND date=$2`,
+        [userId, today]
+      );
+    }
+
+    res.json({ message: `${slot} marked ✅` });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 app.get("/api/my-attendance", authenticateToken, async (req, res) => {
   try {
     const { from, to } = req.query;
