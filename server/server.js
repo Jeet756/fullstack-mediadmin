@@ -1874,11 +1874,11 @@ app.post("/api/self-attendance", authenticateToken, async (req, res) => {
 
     const [start, end] = timeWindows[slot];
 
-    if (totalMinutes < start || totalMinutes > end) {
-      return res.status(400).json({
-        message: `⛔ ${slot} window closed`
-      });
-    }
+    // if (totalMinutes < start || totalMinutes > end) {
+    //   return res.status(400).json({
+    //     message: `⛔ ${slot} window closed`
+    //   });
+    // }
 
     const today = new Date().toISOString().slice(0, 10);
 

@@ -203,18 +203,16 @@ const isAllowed = (slot) => {
 )}
 
 <button
-  style={{ ...primaryBtn, marginLeft: "10px" }}
-  disabled={!isAllowed("afternoon") || todayAttendance?.afternoon}
-  title={!isAllowed("afternoon") ? "Allowed only 1–2:30 PM" : ""}
+  style={primaryBtn}
+  disabled={todayAttendance?.afternoon}
   onClick={() => markAttendance("afternoon")}
 >
   🌞 Afternoon (1 - 2:30)
 </button>
 
 <button
-  style={{ ...primaryBtn, marginLeft: "10px" }}
-  disabled={!isAllowed("night") || todayAttendance?.night}
-  title={!isAllowed("night") ? "Allowed only 7–8:30 PM" : ""}
+ style={primaryBtn}
+  disabled={todayAttendance?.night}
   onClick={() => markAttendance("night")}
 >
   🌙 Night (7 - 8:30)
