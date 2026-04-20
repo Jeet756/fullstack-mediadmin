@@ -7,6 +7,7 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 require("dotenv").config();
 const { Pool } = require("pg");
+const FormData = require("form-data");
 const { body, validationResult } = require("express-validator");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -16,6 +17,44 @@ const app = express();
 const postersFile = path.join(__dirname, "posters.json");
 const JWT_ISSUER = process.env.JWT_ISSUER || "mediadmin";
 const client = SibApiV3Sdk.ApiClient.instance;
+
+const OFFICE_LAT = 22.183757;  // apna exact dalna
+const OFFICE_LNG = 74.843436;
+const ALLOWED_RADIUS = 200; // meters
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // meters
+  const toRad = (x) => (x * Math.PI) / 180;
+
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δφ = toRad(lat2 - lat1);
+  const Δλ = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) *
+      Math.cos(φ2) *
+      Math.sin(Δλ / 2) *
+      Math.sin(Δλ / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+function isTimeAllowed(slot) {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+
+  const map = {
+    morning: [420, 510],    // 7:00 - 8:30
+    afternoon: [780, 870],  // 1:00 - 2:30
+    night: [1140, 1230],    // 7:00 - 8:30
+  };
+
+  const [start, end] = map[slot] || [];
+  return minutes >= start && minutes <= end;
+}
+
 const apiKey = client.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 const pool = new Pool({
@@ -1487,6 +1526,109 @@ VALUES($1,$2,$3,$4,$5,$6,$7)`,
     res.status(500).json({ message: "Server Error" })
   }
 });
+app.post("/api/register-with-face", authenticateToken, async (req, res) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!firstName || !lastName) {
+  return res.status(400).json({ message: "Name required" });
+}
+
+if (!emailRegex.test(email)) {
+  return res.status(400).json({ message: "Valid email required" });
+}
+
+if (!password || password.length < 6) {
+  return res.status(400).json({
+    message: "Password must be at least 6 characters"
+  });
+}
+
+const existing = await pool.query(
+  "SELECT id FROM users WHERE email=$1",
+  [email]
+);
+
+if (existing.rows.length > 0) {
+  return res.status(400).json({
+    message: "Email already registered"
+  });
+}
+
+if (!imageBase64.startsWith("data:image/")) {
+  return res.status(400).json({
+    message: "Invalid image format"
+  });
+}
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      password,
+      role,
+      imageBase64
+    } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ message: "Face required" });
+    }
+
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    const form = new FormData();
+    form.append("file", buffer, "face.jpg");
+
+    const response = await axios.post(
+  process.env.FACE_API_URL,
+  form,
+  {
+    headers: form.getHeaders(),
+    timeout: 5000
+  }
+);
+
+if (!response.data || response.data.error) {
+  return res.status(400).json({ message: response.data?.error || "Face error" });
+}
+
+const embedding = response.data.embedding;
+
+if (!Array.isArray(embedding) || embedding.length !== 128) {
+  return res.status(400).json({ message: "Invalid face embedding" });
+}
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      `INSERT INTO users
+(password,role,firstname,lastname,email,phone,address,face_embedding)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [
+        hashedPassword,
+        role,
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        JSON.stringify(embedding)
+      ]
+    );
+
+    res.json({ message: "User registered with face" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 app.post("/api/applications", async (req, res) => {
   try {
     const {
@@ -1858,30 +2000,37 @@ app.post("/api/self-attendance", authenticateToken, async (req, res) => {
       return res.status(403).json({ message: "Staff only" });
     }
 
-    const { slot } = req.body;
+    const { slot, lat, lng, accuracy } = req.body;
+
+if (!accuracy || accuracy > 50) {
+  return res.status(400).json({
+    message: "Location not accurate"
+  });
+}
+
+    if (lat == null || lng == null) {
+  return res.status(400).json({ message: "Location required" });
+}
+
+    // 🔥 distance check
+    const distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+
+    if (distance > ALLOWED_RADIUS) {
+      return res.status(400).json({
+        message: "❌ You are not at allowed location"
+      });
+    }
+
     if (!["morning", "afternoon", "night"].includes(slot)) {
       return res.status(400).json({ message: "Invalid slot" });
     }
-
-    const now = new Date();
-    const totalMinutes = now.getHours() * 60 + now.getMinutes();
-
-    const timeWindows = {
-      morning: [420, 510],
-      afternoon: [780, 870],
-      night: [1140, 1230],
-    };
-
-    const [start, end] = timeWindows[slot];
-
-    // if (totalMinutes < start || totalMinutes > end) {
-    //   return res.status(400).json({
-    //     message: `⛔ ${slot} window closed`
-    //   });
-    // }
-
-    const today = new Date().toISOString().slice(0, 10);
-
+// 🔥 time restriction
+if (!isTimeAllowed(slot)) {
+  return res.status(400).json({
+    message: "Time not allowed for this slot"
+  });
+}
+const today = new Date().toLocaleDateString("en-CA");
     const existing = await pool.query(
       "SELECT * FROM attendance WHERE user_id=$1 AND date=$2",
       [userId, today]

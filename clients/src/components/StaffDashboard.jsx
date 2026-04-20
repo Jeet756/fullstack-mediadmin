@@ -10,7 +10,6 @@ function StaffDashboard() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-useEffect(() => {
   const fetchToday = async () => {
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -25,6 +24,7 @@ useEffect(() => {
 }
     } catch {}
   };
+useEffect(() => {
   fetchToday();
 }, []);
 
@@ -74,41 +74,54 @@ const isAllowed = (slot) => {
 };
  const markAttendance = async (slot) => {
   try {
-    setLoading(true); // 🔥 UX improve (button click pe loader)
+    setLoading(true);
 
-    const res = await fetch(`${API}/api/self-attendance`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ slot })
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      alert(result.message || "Failed to mark attendance");
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported");
       return;
     }
 
-    alert(result.message || "Attendance marked");
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+const lng = position.coords.longitude;
+const accuracy = position.coords.accuracy;
 
-    const today = new Date().toISOString().split("T")[0];
+        const res = await fetch(`${API}/api/self-attendance`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ slot, lat, lng, accuracy })
+        });
 
-    // 🔥 Direct fresh data fetch (state delay issue avoid)
-    await fetchData(today, today);
+        const result = await res.json();
 
-    // 🔥 also update today's attendance state (buttons disable ke liye)
-    setTodayAttendance(prev => ({
-  ...(prev || {}),
-  [slot]: true
-}));
+        if (!res.ok) {
+  alert(result.message || "Failed");
+  setLoading(false);
+  return;
+}
 
-  } catch (err) {
-    alert("Error while marking attendance");
-  } finally {
-    setLoading(false);
+        alert(result.message);
+        await fetchToday();
+setLoading(false);
+        const today = new Date().toISOString().split("T")[0];
+        await fetchData(today, today);
+
+        setTodayAttendance(prev => ({
+          ...(prev || {}),
+          [slot]: true
+        }));
+      },
+      (error) => {
+  alert("Location permission required");
+  setLoading(false);
+}
+    );
+  } catch {
+    alert("Error");
   }
 };
   const downloadExcel = () => {
@@ -192,31 +205,30 @@ const isAllowed = (slot) => {
 </p>
  <button
   style={primaryBtn}
-  disabled={todayAttendance?.morning}
+  disabled={todayAttendance?.morning || !isAllowed("morning")}
   onClick={() => markAttendance("morning")}
 >
   🌅 Morning (7 - 8:30)
 </button>
-
-{!isAllowed("morning") && (
-  <p style={{ color: "red" }}>⛔ Time over</p>
-)}
+{!isAllowed("morning") && <p style={{ color: "red" }}>⛔ Time over</p>}
 
 <button
   style={primaryBtn}
-  disabled={todayAttendance?.afternoon}
+  disabled={todayAttendance?.afternoon || !isAllowed("afternoon")}
   onClick={() => markAttendance("afternoon")}
 >
   🌞 Afternoon (1 - 2:30)
 </button>
+{!isAllowed("afternoon") && <p style={{ color: "red" }}>⛔ Time over</p>}
 
 <button
- style={primaryBtn}
-  disabled={todayAttendance?.night}
+  style={primaryBtn}
+  disabled={todayAttendance?.night || !isAllowed("night")}
   onClick={() => markAttendance("night")}
 >
   🌙 Night (7 - 8:30)
 </button>
+{!isAllowed("night") && <p style={{ color: "red" }}>⛔ Time over</p>}
 </div>
       <div
         style={{
