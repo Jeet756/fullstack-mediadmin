@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const Replicate = require("replicate");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -1526,39 +1527,12 @@ VALUES($1,$2,$3,$4,$5,$6,$7)`,
     res.status(500).json({ message: "Server Error" })
   }
 });
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
 app.post("/api/register-with-face", authenticateToken, async (req, res) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-if (!firstName || !lastName) {
-  return res.status(400).json({ message: "Name required" });
-}
-
-if (!emailRegex.test(email)) {
-  return res.status(400).json({ message: "Valid email required" });
-}
-
-if (!password || password.length < 6) {
-  return res.status(400).json({
-    message: "Password must be at least 6 characters"
-  });
-}
-
-const existing = await pool.query(
-  "SELECT id FROM users WHERE email=$1",
-  [email]
-);
-
-if (existing.rows.length > 0) {
-  return res.status(400).json({
-    message: "Email already registered"
-  });
-}
-
-if (!imageBase64.startsWith("data:image/")) {
-  return res.status(400).json({
-    message: "Invalid image format"
-  });
-}
   try {
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin only" });
@@ -1575,37 +1549,71 @@ if (!imageBase64.startsWith("data:image/")) {
       imageBase64
     } = req.body;
 
-    if (!imageBase64) {
-      return res.status(400).json({ message: "Face required" });
+    // ✅ VALIDATION
+    if (!firstName || !lastName) {
+      return res.status(400).json({ message: "Name required" });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Valid email required" });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters"
+      });
+    }
+
+    if (!imageBase64 || !imageBase64.startsWith("data:image/")) {
+      return res.status(400).json({
+        message: "Face image required"
+      });
+    }
+
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        message: "Email already registered"
+      });
+    }
+
+    // 🔥 BASE64 → CLOUDINARY
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
 
-    const form = new FormData();
-    form.append("file", buffer, "face.jpg");
+    const uploadResult = await cloudinary.uploader.upload(
+      `data:image/jpeg;base64,${base64Data}`,
+      { folder: "faces" }
+    );
 
-    const response = await axios.post(
-  process.env.FACE_API_URL,
-  form,
-  {
-    headers: form.getHeaders(),
-    timeout: 5000
-  }
-);
+    const imageUrl = uploadResult.secure_url;
 
-if (!response.data || response.data.error) {
-  return res.status(400).json({ message: response.data?.error || "Face error" });
-}
+    // 🔥 FACE EMBEDDING (REPLICATE)
+    const output = await replicate.run(
+      "tensordock/face-embedding:latest",
+      {
+        input: {
+          image: imageUrl
+        }
+      }
+    );
 
-const embedding = response.data.embedding;
+    const embedding = output?.embedding || output;
 
-if (!Array.isArray(embedding) || embedding.length !== 128) {
-  return res.status(400).json({ message: "Invalid face embedding" });
-}
+    if (!embedding || !Array.isArray(embedding)) {
+      return res.status(400).json({
+        message: "Embedding generation failed"
+      });
+    }
 
+    // 🔐 PASSWORD HASH
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 💾 SAVE IN DB
     await pool.query(
       `INSERT INTO users
 (password,role,firstname,lastname,email,phone,address,face_embedding)
@@ -1622,10 +1630,10 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
       ]
     );
 
-    res.json({ message: "User registered with face" });
+    res.json({ message: "User registered with face ✅" });
 
   } catch (err) {
-    console.error(err);
+    console.error("FACE REGISTER ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
