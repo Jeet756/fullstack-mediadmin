@@ -1538,16 +1538,17 @@ app.post("/api/register-with-face", authenticateToken, async (req, res) => {
       return res.status(403).json({ message: "Admin only" });
     }
 
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      address,
-      password,
-      role,
-      imageBase64
-    } = req.body;
+const {
+  firstName,
+  lastName,
+  email,
+  phone,
+  address,
+  password,
+  role,
+  imageBase64,
+  faceEmbedding
+} = req.body;
 
     // ✅ VALIDATION
     if (!firstName || !lastName) {
@@ -1592,36 +1593,9 @@ app.post("/api/register-with-face", authenticateToken, async (req, res) => {
 
     const imageUrl = uploadResult.secure_url;
 
-   let embedding = [];
-
-try {
-  const output = await replicate.run(
-    "cjwbw/face-recognition:755dfdef91557e3b1a0b2c5f4b6d5f9b6d8d929e3e5b2f7a0c2e6f4c2a1b9f5",
-    {
-      input: {
-        image: imageUrl
-      }
-    }
-  );
-
-  console.log("MODEL OUTPUT:", output);
-  console.log("OUTPUT TYPE:", typeof output);
-
-  if (Array.isArray(output)) {
-    embedding = output;
-  } else if (Array.isArray(output?.embedding)) {
-    embedding = output.embedding;
-  } else if (Array.isArray(output?.embeddings)) {
-    embedding = output.embeddings;
-  } else {
-    embedding = [];
-  }
-
-  console.log("FINAL EMBEDDING:", embedding);
-} catch (err) {
-  console.error("Embedding model failed:", err.message);
-  embedding = [];
-} 
+  const embedding = Array.isArray(faceEmbedding)
+  ? faceEmbedding
+  : []; 
 
     // 🔐 PASSWORD HASH
     const hashedPassword = await bcrypt.hash(password, 10);
