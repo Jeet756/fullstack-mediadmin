@@ -129,10 +129,12 @@ const capture = async () => {
 }
 
   const detection = await faceapi
-    .detectSingleFace(
-      videoRef.current,
-      new faceapi.TinyFaceDetectorOptions()
-    );
+  .detectSingleFace(
+    videoRef.current,
+    new faceapi.TinyFaceDetectorOptions()
+  )
+  .withFaceLandmarks()
+  .withFaceDescriptor();
 
   if (!detection) {
     alert("No face detected");
@@ -148,6 +150,7 @@ const capture = async () => {
   ctx.drawImage(videoRef.current, 0, 0);
 
   const base64Image = canvas.toDataURL("image/jpeg");
+  const embedding = Array.from(detection.descriptor);
 
   onCapture(base64Image); // ✅ correct
 
