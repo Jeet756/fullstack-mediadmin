@@ -114,7 +114,9 @@ function Register() {
             <option value="staff">Staff</option>
             <option value="patient">Patient</option>
           </select>
+          <div>FACE COMPONENT BELOW 👇</div>
           <FaceRegister onCapture={(img) => setFaceImage(img)} />
+            <div>FACE COMPONENT ABOVE 👆</div>
           <button type="submit">Register</button>
         </form>
       </div>
