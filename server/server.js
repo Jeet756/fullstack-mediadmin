@@ -1604,15 +1604,24 @@ try {
     }
   );
 
-  embedding = output?.embedding || output || [];
+  console.log("MODEL OUTPUT:", output);
+  console.log("OUTPUT TYPE:", typeof output);
 
-  if (!Array.isArray(embedding)) {
+  if (Array.isArray(output)) {
+    embedding = output;
+  } else if (Array.isArray(output?.embedding)) {
+    embedding = output.embedding;
+  } else if (Array.isArray(output?.embeddings)) {
+    embedding = output.embeddings;
+  } else {
     embedding = [];
   }
+
+  console.log("FINAL EMBEDDING:", embedding);
 } catch (err) {
   console.error("Embedding model failed:", err.message);
   embedding = [];
-}
+} 
 
     // 🔐 PASSWORD HASH
     const hashedPassword = await bcrypt.hash(password, 10);
