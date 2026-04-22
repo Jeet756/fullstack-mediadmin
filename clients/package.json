@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "face-api.js": "^0.22.2",
     "file-saver": "^2.0.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
