@@ -152,8 +152,11 @@ const capture = async () => {
   const base64Image = canvas.toDataURL("image/jpeg");
   const embedding = Array.from(detection.descriptor);
 
-  onCapture(base64Image); // ✅ correct
-
+  onCapture({
+  image: base64Image,
+  embedding
+});
+alert("Face captured successfully");
   setBlinked(false);
 };
 

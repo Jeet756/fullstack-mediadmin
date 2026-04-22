@@ -19,8 +19,21 @@ function Register() {
     setData({ ...data, [e.target.name]: e.target.value });
   };
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
+  e.preventDefault();
+
+  console.log("faceImage:", faceImage);
+  console.log("faceEmbedding:", faceEmbedding);
+  console.log("faceEmbedding length:", faceEmbedding?.length);
+
+  if (!faceImage) {
+    return alert("Please capture face first");
+  }
+
+  if (!faceEmbedding || faceEmbedding.length === 0) {
+    return alert("Face embedding missing. Capture again");
+  }
+
+  const token = localStorage.getItem("token");
     try {
       const res = await fetch(
         "https://fullstack-mediadmin.onrender.com/api/register-with-face",
