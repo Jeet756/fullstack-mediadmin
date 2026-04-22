@@ -4,18 +4,29 @@ import * as faceapi from "face-api.js";
 function FaceRegister({ onCapture }) {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const videoRef = useRef();
+  const intervalRef = useRef(null);
   const [blinked, setBlinked] = useState(false);
+  const [movement, setMovement] = useState({
 
+  center: false,
+  left: false,
+  right: false
+});
+const [status, setStatus] = useState("Idle");
   useEffect(() => {
   startCamera();
   loadModels();
 
-  return () => {
-    if (videoRef.current?.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
-    }
-  };
+ return () => {
+  if (videoRef.current?.srcObject) {
+    const tracks = videoRef.current.srcObject.getTracks();
+    tracks.forEach((track) => track.stop());
+  }
+
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+  }
+};
 }, []);
 
   const startCamera = async () => {
@@ -25,6 +36,9 @@ function FaceRegister({ onCapture }) {
     });
 
     videoRef.current.srcObject = stream;
+    videoRef.current.onloadedmetadata = () => {
+  videoRef.current.play();
+};
   } catch (err) {
     alert("Camera permission denied");
     console.error(err);
@@ -42,16 +56,22 @@ const loadModels = async () => {
   }
 };
 
-const detectBlink = () => {
+const detectHeadMovement = () => {
   if (!modelsLoaded) {
     alert("Models are still loading");
     return;
   }
+  if (intervalRef.current) {
+  clearInterval(intervalRef.current);
+}
+setStatus("Look straight");
+  let steps = {
+    center: false,
+    left: false,
+    right: false
+  };
 
-  let blinkCount = 0;
-  let lastEyeOpen = true;
-
-  const interval = setInterval(async () => {
+  intervalRef.current = setInterval(async () => {
     const detection = await faceapi
       .detectSingleFace(
         videoRef.current,
@@ -61,37 +81,40 @@ const detectBlink = () => {
 
     if (!detection) return;
 
-    const leftEye = detection.landmarks.getLeftEye();
-    const rightEye = detection.landmarks.getRightEye();
+    const nose = detection.landmarks.getNose();
+    const noseX = nose[3].x;
+    const faceWidth = videoRef.current.videoWidth;
 
-    // ✅ NEW LOGIC (paste here)
-const getEyeRatio = (eye) => {
-  const vertical = Math.abs(eye[1].y - eye[5].y);
-  const horizontal = Math.abs(eye[0].x - eye[3].x);
-  return vertical / horizontal;
-};
+    const ratio = noseX / faceWidth;
 
-const leftRatio = getEyeRatio(leftEye);
-const rightRatio = getEyeRatio(rightEye);
+    console.log("Face Position:", ratio);
 
-console.log("Eye Ratios:", leftRatio, rightRatio); // debug
+    if (ratio > 0.4 && ratio < 0.6) {
+  steps.center = true;
+  setStatus("Now move LEFT");
+}
 
-const isClosed = leftRatio < 0.23 && rightRatio < 0.23;
+   if (ratio < 0.35 && steps.center) {
+  steps.left = true;
+  setStatus("Now move RIGHT");
+  console.log("Left detected");
+}
 
-    // detect transition (open -> closed)
-    if (lastEyeOpen && isClosed) {
-      blinkCount++;
-      console.log("Blink detected");
+    // RIGHT
+    if (ratio > 0.65 && steps.left) {
+      steps.right = true;
+      console.log("Right detected");
     }
 
-    lastEyeOpen = !isClosed;
-
-    if (blinkCount >= 1) {
-      clearInterval(interval);
-      setBlinked(true);
-      alert("Blink detected ✅");
+    // DONE
+    if (steps.center && steps.left && steps.right) {
+      setStatus("Verified ✅");
+      clearInterval(intervalRef.current);
+      setMovement(steps);
+      setBlinked(true); // reuse same flag
+      alert("Liveness verified ✅");
     }
-  }, 200); // हर 200ms check
+  }, 300);
 };
 
 const capture = async () => {
@@ -101,9 +124,9 @@ const capture = async () => {
   }
 
   if (!blinked) {
-    alert("Blink first");
-    return;
-  }
+  alert("Please verify face movement first");
+  return;
+}
 
   const detection = await faceapi
     .detectSingleFace(
@@ -135,8 +158,14 @@ const capture = async () => {
     <div>
       <video ref={videoRef} autoPlay muted playsInline width="300" />
       <br />
-      <button type="button" onClick={detectBlink}>
-  Check Blink
+      <div>
+  Step 1: Look straight <br />
+  Step 2: Move head LEFT <br />
+  Step 3: Move head RIGHT
+</div>
+<div>Status: {status}</div>
+      <button type="button" onClick={detectHeadMovement}>
+  Verify Face Movement
 </button>
 
 <button type="button" onClick={capture}>
