@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import FaceRegister from "../admin/FaceRegister";
 function Register() {
   const [faceImage, setFaceImage] = useState("");
+  const [faceEmbedding, setFaceEmbedding] = useState([]);
   const navigate = useNavigate();
   const [data, setData] = useState({
     firstName: "",
@@ -31,7 +32,8 @@ function Register() {
           },
           body: JSON.stringify({
   ...data,
-  imageBase64: faceImage
+  imageBase64: faceImage,
+  faceEmbedding
 }),
         }
       );
@@ -115,7 +117,12 @@ function Register() {
             <option value="patient">Patient</option>
           </select>
           <div>FACE COMPONENT BELOW 👇</div>
-          <FaceRegister onCapture={(img) => setFaceImage(img)} />
+          <FaceRegister
+  onCapture={(data) => {
+    setFaceImage(data.image);
+    setFaceEmbedding(data.embedding);
+  }}
+/>
             <div>FACE COMPONENT ABOVE 👆</div>
           <button type="submit">Register</button>
         </form>
