@@ -76,7 +76,7 @@ const rightRatio = getEyeRatio(rightEye);
 
 console.log("Eye Ratios:", leftRatio, rightRatio); // debug
 
-const isClosed = leftRatio < 0.2 && rightRatio < 0.2;
+const isClosed = leftRatio < 0.23 && rightRatio < 0.23;
 
     // detect transition (open -> closed)
     if (lastEyeOpen && isClosed) {
