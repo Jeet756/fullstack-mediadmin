@@ -42,36 +42,47 @@ const loadModels = async () => {
   }
 };
 
-const detectBlink = async () => {
+const detectBlink = () => {
   if (!modelsLoaded) {
     alert("Models are still loading");
     return;
   }
 
-  const detection = await faceapi
-    .detectSingleFace(
-      videoRef.current,
-      new faceapi.TinyFaceDetectorOptions()
-    )
-    .withFaceLandmarks();
+  let blinkCount = 0;
+  let lastEyeOpen = true;
 
-  if (!detection) {
-    alert("Face not detected");
-    return;
-  }
+  const interval = setInterval(async () => {
+    const detection = await faceapi
+      .detectSingleFace(
+        videoRef.current,
+        new faceapi.TinyFaceDetectorOptions()
+      )
+      .withFaceLandmarks();
 
-  const leftEye = detection.landmarks.getLeftEye();
-  const rightEye = detection.landmarks.getRightEye();
+    if (!detection) return;
 
-  const leftEyeOpen = Math.abs(leftEye[1].y - leftEye[5].y);
-  const rightEyeOpen = Math.abs(rightEye[1].y - rightEye[5].y);
+    const leftEye = detection.landmarks.getLeftEye();
+    const rightEye = detection.landmarks.getRightEye();
 
-  if (leftEyeOpen < 6 && rightEyeOpen < 6) {
-    setBlinked(true);
-    alert("Blink detected ✅");
-  } else {
-    alert("Please blink properly");
-  }
+    const leftEyeOpen = Math.abs(leftEye[1].y - leftEye[5].y);
+    const rightEyeOpen = Math.abs(rightEye[1].y - rightEye[5].y);
+
+    const isClosed = leftEyeOpen < 5 && rightEyeOpen < 5;
+
+    // detect transition (open -> closed)
+    if (lastEyeOpen && isClosed) {
+      blinkCount++;
+      console.log("Blink detected");
+    }
+
+    lastEyeOpen = !isClosed;
+
+    if (blinkCount >= 1) {
+      clearInterval(interval);
+      setBlinked(true);
+      alert("Blink detected ✅");
+    }
+  }, 200); // हर 200ms check
 };
 
 const capture = async () => {
