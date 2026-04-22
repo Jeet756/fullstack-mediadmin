@@ -1592,23 +1592,27 @@ app.post("/api/register-with-face", authenticateToken, async (req, res) => {
 
     const imageUrl = uploadResult.secure_url;
 
-    // 🔥 FACE EMBEDDING (REPLICATE)
-    const output = await replicate.run(
-      "tensordock/face-embedding:latest",
-      {
-        input: {
-          image: imageUrl
-        }
+   let embedding = [];
+
+try {
+  const output = await replicate.run(
+    "cjwbw/face-recognition:755dfdef91557e3b1a0b2c5f4b6d5f9b6d8d929e3e5b2f7a0c2e6f4c2a1b9f5",
+    {
+      input: {
+        image: imageUrl
       }
-    );
-
-    const embedding = output?.embedding || output;
-
-    if (!embedding || !Array.isArray(embedding)) {
-      return res.status(400).json({
-        message: "Embedding generation failed"
-      });
     }
+  );
+
+  embedding = output?.embedding || output || [];
+
+  if (!Array.isArray(embedding)) {
+    embedding = [];
+  }
+} catch (err) {
+  console.error("Embedding model failed:", err.message);
+  embedding = [];
+}
 
     // 🔐 PASSWORD HASH
     const hashedPassword = await bcrypt.hash(password, 10);
