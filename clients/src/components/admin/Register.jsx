@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import FaceRegister from "../admin/FaceRegister";
 function Register() {
+  const [faceImage, setFaceImage] = useState("");
   const navigate = useNavigate();
   const [data, setData] = useState({
     firstName: "",
@@ -20,14 +22,17 @@ function Register() {
     const token = localStorage.getItem("token");
     try {
       const res = await fetch(
-        "https://fullstack-mediadmin.onrender.com/api/register",
+        "https://fullstack-mediadmin.onrender.com/api/register-with-face",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+  ...data,
+  imageBase64: faceImage
+}),
         }
       );
       const result = await res.json();
@@ -109,6 +114,7 @@ function Register() {
             <option value="staff">Staff</option>
             <option value="patient">Patient</option>
           </select>
+          <FaceRegister onCapture={(img) => setFaceImage(img)} />
           <button type="submit">Register</button>
         </form>
       </div>

@@ -34,6 +34,7 @@ const loadModels = async () => {
   try {
     await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
     await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+    await faceapi.nets.faceRecognitionNet.loadFromUri("/models"); // 🔥 add this
     setModelsLoaded(true);
   } catch (err) {
     console.error("Model load failed", err);
@@ -47,20 +48,20 @@ const detectBlink = async () => {
     return;
   }
 
-  const detections = await faceapi
+  const detection = await faceapi
     .detectSingleFace(
       videoRef.current,
       new faceapi.TinyFaceDetectorOptions()
     )
     .withFaceLandmarks();
 
-  if (!detections) {
+  if (!detection) {
     alert("Face not detected");
     return;
   }
 
-  const leftEye = detections.landmarks.getLeftEye();
-  const rightEye = detections.landmarks.getRightEye();
+  const leftEye = detection.landmarks.getLeftEye();
+  const rightEye = detection.landmarks.getRightEye();
 
   const leftEyeOpen = Math.abs(leftEye[1].y - leftEye[5].y);
   const rightEyeOpen = Math.abs(rightEye[1].y - rightEye[5].y);
@@ -73,47 +74,40 @@ const detectBlink = async () => {
   }
 };
 
- const capture = async () => {
+const capture = async () => {
   if (!modelsLoaded) {
-  alert("Models are still loading");
-  return;
-}
-const detections = await faceapi.detectAllFaces(
-  videoRef.current,
-  new faceapi.TinyFaceDetectorOptions()
-);
-
-if (detections.length === 0) {
-  alert("No face detected");
-  return;
-}
-
-if (detections.length > 1) {
-  alert("Only one face allowed");
-  return;
-}
+    alert("Models are still loading");
+    return;
+  }
 
   if (!blinked) {
     alert("Blink first");
     return;
   }
 
-  const canvas = document.createElement("canvas");
-  canvas.width = videoRef.current.videoWidth;
-  canvas.height = videoRef.current.videoHeight;
+  const detection = await faceapi
+    .detectSingleFace(
+      videoRef.current,
+      new faceapi.TinyFaceDetectorOptions()
+    )
+    .withFaceLandmarks()
+    .withFaceDescriptor();
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(videoRef.current, 0, 0);
+  if (!detection) {
+    alert("No face detected");
+    return;
+  }
 
-const base64 = canvas.toDataURL("image/jpeg", 0.9);
-  onCapture(base64);
+  const embedding = Array.from(detection.descriptor);
+
+  onCapture(embedding); // 🔥 ONLY THIS
 
   setBlinked(false);
 };
 
   return (
     <div>
-      <video ref={videoRef} autoPlay width="300" />
+      <video ref={videoRef} autoPlay muted playsInline width="300" />
       <br />
       <button onClick={detectBlink}>Check Blink</button>
       <button onClick={capture}>Capture</button>
