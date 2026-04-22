@@ -66,7 +66,7 @@ const detectBlink = async () => {
   const leftEyeOpen = Math.abs(leftEye[1].y - leftEye[5].y);
   const rightEyeOpen = Math.abs(rightEye[1].y - rightEye[5].y);
 
-  if (leftEyeOpen < 3 && rightEyeOpen < 3) {
+  if (leftEyeOpen < 6 && rightEyeOpen < 6) {
     setBlinked(true);
     alert("Blink detected ✅");
   } else {
@@ -89,18 +89,24 @@ const capture = async () => {
     .detectSingleFace(
       videoRef.current,
       new faceapi.TinyFaceDetectorOptions()
-    )
-    .withFaceLandmarks()
-    .withFaceDescriptor();
+    );
 
   if (!detection) {
     alert("No face detected");
     return;
   }
 
-  const embedding = Array.from(detection.descriptor);
+  // 🎯 IMAGE CAPTURE
+  const canvas = document.createElement("canvas");
+  canvas.width = videoRef.current.videoWidth;
+  canvas.height = videoRef.current.videoHeight;
 
-  onCapture(embedding); // 🔥 ONLY THIS
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(videoRef.current, 0, 0);
+
+  const base64Image = canvas.toDataURL("image/jpeg");
+
+  onCapture(base64Image); // ✅ correct
 
   setBlinked(false);
 };
