@@ -64,10 +64,19 @@ const detectBlink = () => {
     const leftEye = detection.landmarks.getLeftEye();
     const rightEye = detection.landmarks.getRightEye();
 
-    const leftEyeOpen = Math.abs(leftEye[1].y - leftEye[5].y);
-    const rightEyeOpen = Math.abs(rightEye[1].y - rightEye[5].y);
+    // ✅ NEW LOGIC (paste here)
+const getEyeRatio = (eye) => {
+  const vertical = Math.abs(eye[1].y - eye[5].y);
+  const horizontal = Math.abs(eye[0].x - eye[3].x);
+  return vertical / horizontal;
+};
 
-    const isClosed = leftEyeOpen < 5 && rightEyeOpen < 5;
+const leftRatio = getEyeRatio(leftEye);
+const rightRatio = getEyeRatio(rightEye);
+
+console.log("Eye Ratios:", leftRatio, rightRatio); // debug
+
+const isClosed = leftRatio < 0.2 && rightRatio < 0.2;
 
     // detect transition (open -> closed)
     if (lastEyeOpen && isClosed) {
