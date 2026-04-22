@@ -126,8 +126,13 @@ const capture = async () => {
     <div>
       <video ref={videoRef} autoPlay muted playsInline width="300" />
       <br />
-      <button onClick={detectBlink}>Check Blink</button>
-      <button onClick={capture}>Capture</button>
+      <button type="button" onClick={detectBlink}>
+  Check Blink
+</button>
+
+<button type="button" onClick={capture}>
+  Capture
+</button>
     </div>
   );
 }
