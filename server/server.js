@@ -2052,7 +2052,7 @@ app.post("/api/self-attendance-face", authenticateToken, async (req, res) => {
     }
 
     // ✅ LOCATION CHECK
-    if (!accuracy || accuracy > 50) {
+    if (!accuracy || accuracy > 150) {
       return res.status(400).json({ message: "Location not accurate" });
     }
 
