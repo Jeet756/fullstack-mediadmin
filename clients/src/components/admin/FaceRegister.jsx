@@ -175,16 +175,16 @@ const capture = async () => {
   videoRef.current.readyState !== 4 ||
   videoRef.current.videoWidth === 0
 ) continue;
-    const detections = await faceapi
-      .detectAllFaces(
-        videoRef.current,
-        new faceapi.TinyFaceDetectorOptions({
-  inputSize: 416,
-scoreThreshold: 0.4,
-})
-      )
-      .withFaceLandmarks()
-      .withFaceDescriptor();
+    const detection = await faceapi
+  .detectSingleFace(
+    videoRef.current,
+    new faceapi.TinyFaceDetectorOptions({
+      inputSize: 416,
+      scoreThreshold: 0.4,
+    })
+  )
+  .withFaceLandmarks()
+  .withFaceDescriptor();
 
   if (detections.length === 0) {
   setStatus("No face detected ❌");
