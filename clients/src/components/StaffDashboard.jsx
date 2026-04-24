@@ -19,11 +19,7 @@ const [pendingSlot, setPendingSlot] = useState(null);
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-  setTodayAttendance(data[0]);
-} else {
-  setTodayAttendance({});
-}
+setTodayAttendance(data[0] || {});
     } catch {}
   };
 useEffect(() => {
@@ -64,16 +60,18 @@ useEffect(() => {
   return now.getHours() * 60 + now.getMinutes();
 };
 
-const isAllowed = (slot) => {
-  const t = getMinutes();
-  const map = {
-    morning: [420, 510],
-    afternoon: [780, 870],
-    night: [1140, 1230],
-  };
-  const [s, e] = map[slot];
-  return t >= s && t <= e;
-};
+// const isAllowed = (slot) => {
+//   const t = getMinutes();
+//   const map = {
+//     morning: [420, 510],
+//     afternoon: [780, 870],
+//     night: [1140, 1230],
+//   };
+//   const [s, e] = map[slot];
+//   return t >= s && t <= e;
+// };
+
+const isAllowed = () => true; // 🔥 TEST MODE
  const markAttendance = async (slot) => {
   try {
     setLoading(true);
@@ -252,8 +250,9 @@ const markAttendanceWithFace = async (slot, embedding) => {
 </p>
  <button
   style={primaryBtn}
-  disabled={todayAttendance?.morning || !isAllowed("morning")}
+  disabled={false}
   onClick={() => {
+    console.log("clicked morning");
     setPendingSlot("morning");
     setShowFace(true);
   }}
