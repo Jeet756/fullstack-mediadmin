@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import FaceRegister from "../admin/FaceRegister";
 function Register() {
-  const [faceImage, setFaceImage] = useState("");
   const [faceEmbedding, setFaceEmbedding] = useState([]);
   const navigate = useNavigate();
   const [data, setData] = useState({
@@ -20,18 +19,12 @@ function Register() {
   };
   const handleSubmit = async (e) => {
   e.preventDefault();
-
-  console.log("faceImage:", faceImage);
   console.log("faceEmbedding:", faceEmbedding);
   console.log("faceEmbedding length:", faceEmbedding?.length);
 
-  if (!faceImage) {
-    return alert("Please capture face first");
-  }
-
-  if (!faceEmbedding || faceEmbedding.length === 0) {
-    return alert("Face embedding missing. Capture again");
-  }
+ if (!Array.isArray(faceEmbedding) || faceEmbedding.length !== 128) {
+  return alert("Invalid face embedding. Capture again");
+}
 
   const token = localStorage.getItem("token");
     try {
@@ -45,7 +38,6 @@ function Register() {
           },
           body: JSON.stringify({
   ...data,
-  imageBase64: faceImage,
   faceEmbedding
 }),
         }
@@ -53,6 +45,7 @@ function Register() {
       const result = await res.json();
       if (!res.ok) return alert(result.message);
       alert(result.message);
+      setFaceEmbedding([]);
       setData({
         firstName: "",
         lastName: "",
@@ -132,7 +125,6 @@ function Register() {
           <div>FACE COMPONENT BELOW 👇</div>
           <FaceRegister
   onCapture={(data) => {
-    setFaceImage(data.image);
     setFaceEmbedding(data.embedding);
   }}
 />

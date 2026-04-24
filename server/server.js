@@ -1546,7 +1546,6 @@ const {
   address,
   password,
   role,
-  imageBase64,
   faceEmbedding
 } = req.body;
 
@@ -1555,20 +1554,16 @@ const {
       return res.status(400).json({ message: "Name required" });
     }
 
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Valid email required" });
     }
-
     if (!password || password.length < 6) {
       return res.status(400).json({
         message: "Password must be at least 6 characters"
-      });
-    }
-
-    if (!imageBase64 || !imageBase64.startsWith("data:image/")) {
-      return res.status(400).json({
-        message: "Face image required"
       });
     }
 
@@ -1583,19 +1578,33 @@ const {
       });
     }
 
-    // 🔥 BASE64 → CLOUDINARY
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-    const uploadResult = await cloudinary.uploader.upload(
-      `data:image/jpeg;base64,${base64Data}`,
-      { folder: "faces" }
-    );
+  if (!Array.isArray(faceEmbedding) || faceEmbedding.length !== 128) {
+  return res.status(400).json({
+    message: "Invalid face embedding length"
+  });
+}
 
-    const imageUrl = uploadResult.secure_url;
+const isValid = faceEmbedding.every(
+  (v) => typeof v === "number" && Number.isFinite(v)
+);
 
-  const embedding = Array.isArray(faceEmbedding)
-  ? faceEmbedding
-  : []; 
+if (!isValid) {
+  return res.status(400).json({
+    message: "Invalid embedding values"
+  });
+}
+
+const embedding = faceEmbedding;
+const magnitude = Math.sqrt(
+  faceEmbedding.reduce((sum, v) => sum + v * v, 0)
+);
+
+if (magnitude < 0.9 || magnitude > 1.1) {
+  return res.status(400).json({
+    message: "Invalid embedding normalization"
+  });
+}
 
     // 🔐 PASSWORD HASH
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -1613,7 +1622,7 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
         email,
         phone,
         address,
-        JSON.stringify(embedding)
+        embedding
       ]
     );
 

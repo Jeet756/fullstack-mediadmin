@@ -5,14 +5,13 @@ function FaceRegister({ onCapture }) {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const videoRef = useRef();
   const intervalRef = useRef(null);
-  const [blinked, setBlinked] = useState(false);
-  const [movement, setMovement] = useState({
-
+const [verified, setVerified] = useState(false);
+const [status, setStatus] = useState("Idle");
+const stepsRef = useRef({
   center: false,
   left: false,
-  right: false
+  right: false,
 });
-const [status, setStatus] = useState("Idle");
   useEffect(() => {
   startCamera();
   loadModels();
@@ -57,28 +56,42 @@ const loadModels = async () => {
 };
 
 const detectHeadMovement = () => {
+  // reset steps
+stepsRef.current = {
+  center: false,
+  left: false,
+  right: false,
+};
+
+// clear old interval
+if (intervalRef.current) {
+  clearInterval(intervalRef.current);
+  intervalRef.current = null;
+}
   if (!modelsLoaded) {
     alert("Models are still loading");
     return;
   }
-  if (intervalRef.current) {
-  clearInterval(intervalRef.current);
-}
-setStatus("Look straight");
-  let steps = {
-    center: false,
-    left: false,
-    right: false
-  };
+
+const steps = stepsRef.current;
+
+  setStatus("Look straight");
 
   intervalRef.current = setInterval(async () => {
-    const detection = await faceapi
-      .detectSingleFace(
-        videoRef.current,
-        new faceapi.TinyFaceDetectorOptions()
-      )
+    if (!videoRef.current || videoRef.current.readyState !== 4) {
+  return;
+}
+    const detections = await faceapi
+      .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks();
 
+    // ❌ multiple faces
+    if (detections.length !== 1) {
+      setStatus("Only 1 face allowed ❌");
+      return;
+    }
+
+    const detection = detections[0];
     if (!detection) return;
 
     const nose = detection.landmarks.getNose();
@@ -87,77 +100,147 @@ setStatus("Look straight");
 
     const ratio = noseX / faceWidth;
 
-    console.log("Face Position:", ratio);
-
-    if (ratio > 0.4 && ratio < 0.6) {
+// CENTER
+if (!steps.center && ratio > 0.45 && ratio < 0.55) {
   steps.center = true;
   setStatus("Now move LEFT");
 }
 
-   if (ratio < 0.35 && steps.center) {
+// LEFT
+else if (!steps.left && steps.center && ratio < 0.35) {
   steps.left = true;
   setStatus("Now move RIGHT");
-  console.log("Left detected");
 }
 
-    // RIGHT
-    if (ratio > 0.65 && steps.left) {
-      steps.right = true;
-      console.log("Right detected");
-    }
+// RIGHT
+else if (!steps.right && steps.left && ratio > 0.65) {
+  steps.right = true;
+}
 
     // DONE
     if (steps.center && steps.left && steps.right) {
       setStatus("Verified ✅");
       clearInterval(intervalRef.current);
-      setMovement(steps);
-      setBlinked(true); // reuse same flag
+      intervalRef.current = null;
+      setVerified(true);
       alert("Liveness verified ✅");
     }
+
   }, 300);
 };
 
 const capture = async () => {
   if (!modelsLoaded) {
-    alert("Models are still loading");
+    alert("Models loading...");
     return;
   }
 
-  if (!blinked) {
-  alert("Please verify face movement first");
-  return;
+  if (!verified) {
+    alert("Verify face movement first");
+    return;
+  }
+
+  setStatus("Capturing multiple samples...");
+
+  let tempEmbeddings = [];
+
+  for (let i = 0; i < 5; i++) {
+      if (!videoRef.current || videoRef.current.readyState !== 4) continue;
+    const detections = await faceapi
+      .detectAllFaces(
+        videoRef.current,
+        new faceapi.TinyFaceDetectorOptions()
+      )
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    // ❌ multiple / no face
+    if (detections.length !== 1) {
+      setStatus("Only 1 face allowed ❌");
+      continue;
+    }
+
+    const detection = detections[0];
+
+    // ❌ null safety (crash fix)
+    if (!detection) {
+      setStatus("No face detected ❌");
+      continue;
+    }
+if (!detection.detection) {
+  setStatus("Detection failed ❌");
+  continue;
+}
+    // 📦 FACE BOX
+    const box = detection.detection.box;
+
+    const faceArea = box.width * box.height;
+    const videoArea =
+      videoRef.current.videoWidth * videoRef.current.videoHeight;
+
+    const ratio = faceArea / videoArea;
+
+    // ❌ too far
+    if (ratio < 0.1) {
+      setStatus("Face too far ❌");
+      continue;
+    }
+
+    // ❌ not centered
+    const centerX = box.x + box.width / 2;
+    const videoCenter = videoRef.current.videoWidth / 2;
+
+    if (
+      Math.abs(centerX - videoCenter) >
+      videoRef.current.videoWidth * 0.2
+    ) {
+      setStatus("Center your face ❌");
+      continue;
+    }
+
+if (detection.descriptor && detection.detection.score > 0.85) {
+  tempEmbeddings.push(Array.from(detection.descriptor));
 }
 
-  const detection = await faceapi
-  .detectSingleFace(
-    videoRef.current,
-    new faceapi.TinyFaceDetectorOptions()
-  )
-  .withFaceLandmarks()
-  .withFaceDescriptor();
+    await new Promise((res) => setTimeout(res, 400));
+  }
 
-  if (!detection) {
-    alert("No face detected");
+  if (tempEmbeddings.length < 3) {
+    alert("Face not clear. Try again.");
     return;
   }
 
-  // 🎯 IMAGE CAPTURE
-  const canvas = document.createElement("canvas");
-  canvas.width = videoRef.current.videoWidth;
-  canvas.height = videoRef.current.videoHeight;
+  // ✅ AVERAGE
+  const avg = new Array(128).fill(0);
+  tempEmbeddings.forEach((emb) => {
+    emb.forEach((val, i) => {
+      avg[i] += val;
+    });
+  });
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(videoRef.current, 0, 0);
+  for (let i = 0; i < 128; i++) {
+    avg[i] /= tempEmbeddings.length;
+  }
 
-  const base64Image = canvas.toDataURL("image/jpeg");
-  const embedding = Array.from(detection.descriptor);
+  // ✅ NORMALIZE
+  const norm = Math.sqrt(avg.reduce((sum, v) => sum + v * v, 0));
+  const finalEmbedding = avg.map((v) => v / norm);
 
   onCapture({
-  image: base64Image,
-  embedding
-});
-alert("Face captured successfully");
-  setBlinked(false);
+    embedding: finalEmbedding,
+  });
+
+  alert("Face captured (high quality) ✅");
+
+  setVerified(false);
+  clearInterval(intervalRef.current);
+intervalRef.current = null;
+setStatus("Face captured successfully ✅");
+stepsRef.current = {
+  center: false,
+  left: false,
+  right: false,
+};
 };
 
   return (
@@ -165,9 +248,7 @@ alert("Face captured successfully");
       <video ref={videoRef} autoPlay muted playsInline width="300" />
       <br />
       <div>
-  Step 1: Look straight <br />
-  Step 2: Move head LEFT <br />
-  Step 3: Move head RIGHT
+  Follow the instruction shown below 👇
 </div>
 <div>Status: {status}</div>
       <button type="button" onClick={detectHeadMovement}>
