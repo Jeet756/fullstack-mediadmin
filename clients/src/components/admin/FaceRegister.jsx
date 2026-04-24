@@ -96,7 +96,7 @@ scoreThreshold: 0.4,
       .withFaceLandmarks();
 
 if (detections.length === 0) {
-  setStatus("Face lost ❌ Come back to center");
+  setStatus("Face lost ❌ Come back to center and verify face movement again");
 
   // 🔥 RESET FLOW
   stepsRef.current = {
@@ -268,7 +268,8 @@ if (detection.descriptor && detection.detection.score > 0.85) {
   // ✅ NORMALIZE
   const norm = Math.sqrt(avg.reduce((sum, v) => sum + v * v, 0));
   const finalEmbedding = avg.map((v) => v / norm);
-
+console.log("FINAL EMBEDDING:", finalEmbedding);
+console.log("LENGTH:", finalEmbedding.length);
   onCapture({
     embedding: finalEmbedding,
   });
