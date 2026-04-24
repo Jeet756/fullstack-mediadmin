@@ -175,8 +175,8 @@ const capture = async () => {
   videoRef.current.readyState !== 4 ||
   videoRef.current.videoWidth === 0
 ) continue;
-    const detection = await faceapi
-  .detectSingleFace(
+    const detections = await faceapi
+  .detectAllFaces(
     videoRef.current,
     new faceapi.TinyFaceDetectorOptions({
       inputSize: 416,
@@ -184,7 +184,7 @@ const capture = async () => {
     })
   )
   .withFaceLandmarks()
-  .withFaceDescriptor();
+  .withFaceDescriptors();  // ✅ correct
 
   if (detections.length === 0) {
   setStatus("No face detected ❌");
