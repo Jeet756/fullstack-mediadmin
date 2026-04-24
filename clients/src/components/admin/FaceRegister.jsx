@@ -124,21 +124,22 @@ const noseX = nose[3].x;
     const faceWidth = videoRef.current.videoWidth;
 
     const ratio = noseX / faceWidth;
+const adjustedRatio = 1 - ratio;
 
 // CENTER
-if (!steps.center && ratio > 0.4 && ratio < 0.6) {
+if (!steps.center && adjustedRatio > 0.4 && adjustedRatio < 0.6) {
   steps.center = true;
   setStatus("Now move LEFT");
 }
 
 // LEFT
-else if (!steps.left && steps.center && ratio < 0.38) {
+else if (!steps.left && steps.center && adjustedRatio < 0.38) {
   steps.left = true;
   setStatus("Now move RIGHT");
 }
 
 // RIGHT
-else if (!steps.right && steps.left && ratio > 0.62) {
+else if (!steps.right && steps.left && adjustedRatio > 0.62) {
   steps.right = true;
 }
 
