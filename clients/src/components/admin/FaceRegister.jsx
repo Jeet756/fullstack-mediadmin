@@ -56,6 +56,9 @@ const loadModels = async () => {
 };
 
 const detectHeadMovement = () => {
+  if (!videoRef.current?.srcObject) {
+  startCamera();
+}
   // reset steps
 stepsRef.current = {
   center: false,
@@ -85,11 +88,19 @@ const steps = stepsRef.current;
       .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks();
 
-    // ❌ multiple faces
-    if (detections.length !== 1) {
-      setStatus("Only 1 face allowed ❌");
-      return;
-    }
+if (detections.length === 0) {
+  setStatus("No face detected ❌");
+  return;
+}
+
+if (detections.length > 1) {
+  // filter closest (largest face)
+  detections.sort(
+    (a, b) =>
+      b.detection.box.width * b.detection.box.height -
+      a.detection.box.width * a.detection.box.height
+  );
+}
 
     const detection = detections[0];
     if (!detection) return;
@@ -119,11 +130,10 @@ else if (!steps.right && steps.left && ratio > 0.65) {
 
     // DONE
     if (steps.center && steps.left && steps.right) {
-      setStatus("Verified ✅");
       clearInterval(intervalRef.current);
       intervalRef.current = null;
       setVerified(true);
-      alert("Liveness verified ✅");
+      setStatus("Liveness verified ✅");
     }
 
   }, 300);
@@ -154,13 +164,19 @@ const capture = async () => {
       .withFaceLandmarks()
       .withFaceDescriptor();
 
-    // ❌ multiple / no face
-    if (detections.length !== 1) {
-      setStatus("Only 1 face allowed ❌");
-      continue;
-    }
+  if (detections.length === 0) {
+  setStatus("No face detected ❌");
+  continue;
+}
 
-    const detection = detections[0];
+// pick largest face
+detections.sort(
+  (a, b) =>
+    b.detection.box.width * b.detection.box.height -
+    a.detection.box.width * a.detection.box.height
+);
+
+const detection = detections[0];
 
     // ❌ null safety (crash fix)
     if (!detection) {
@@ -230,8 +246,6 @@ if (detection.descriptor && detection.detection.score > 0.85) {
     embedding: finalEmbedding,
   });
 
-  alert("Face captured (high quality) ✅");
-
   setVerified(false);
   clearInterval(intervalRef.current);
 intervalRef.current = null;
@@ -241,6 +255,10 @@ stepsRef.current = {
   left: false,
   right: false,
 };
+if (videoRef.current?.srcObject) {
+  const tracks = videoRef.current.srcObject.getTracks();
+  tracks.forEach((track) => track.stop());
+}
 };
 
   return (
@@ -255,7 +273,7 @@ stepsRef.current = {
   Verify Face Movement
 </button>
 
-<button type="button" onClick={capture}>
+<button type="button" onClick={capture} disabled={!verified}>
   Capture
 </button>
     </div>
