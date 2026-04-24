@@ -55,20 +55,22 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
   return R * c;
 }
+// function isTimeAllowed(slot) {
+//   const now = new Date();
+//   const minutes = now.getHours() * 60 + now.getMinutes();
+
+//   const map = {
+//     morning: [420, 510],    // 7:00 - 8:30
+//     afternoon: [780, 870],  // 1:00 - 2:30
+//     night: [1140, 1230],    // 7:00 - 8:30
+//   };
+
+//   const [start, end] = map[slot] || [];
+//   return minutes >= start && minutes <= end;
+// }
 function isTimeAllowed(slot) {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-
-  const map = {
-    morning: [420, 510],    // 7:00 - 8:30
-    afternoon: [780, 870],  // 1:00 - 2:30
-    night: [1140, 1230],    // 7:00 - 8:30
-  };
-
-  const [start, end] = map[slot] || [];
-  return minutes >= start && minutes <= end;
+  return true; // 🔥 TEST MODE (time restriction off)
 }
-
 const apiKey = client.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 const pool = new Pool({
@@ -371,6 +373,20 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+
+
+
+// isse pehle face sytem k liye 
+
+
+
+
+
+
+
+
+
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
@@ -1488,164 +1504,6 @@ app.post(
     }
   }
 );
-app.post("/api/register", authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    const {
-      password,
-      role,
-      firstName,
-      lastName,
-      email,
-      phone,
-      address
-    } = req.body;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Valid email required" });
-    }
-    if (!firstName || !lastName) {
-      return res.status(400).json({ message: "Name required" });
-    }
-    if (!password || password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" })
-    }
-    const existing = await pool.query(
-      "SELECT * FROM users WHERE email=$1",
-      [email]
-    );
-    if (existing.rows.length > 0) {
-      return res.status(400).json({ message: "Email already registered" });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      `INSERT INTO users
-(password,role,firstname,lastname,email,phone,address)
-VALUES($1,$2,$3,$4,$5,$6,$7)`,
-      [
-        hashedPassword,
-        role,
-        firstName,
-        lastName,
-        email,
-        phone,
-        address
-      ]
-    );
-    res.json({ message: "User Registered Successfully" });
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ message: "Server Error" })
-  }
-});
-
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
-app.post("/api/register-with-face", authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin only" });
-    }
-
-const {
-  firstName,
-  lastName,
-  email,
-  phone,
-  address,
-  password,
-  role,
-  faceEmbedding
-} = req.body;
-
-    // ✅ VALIDATION
-    if (!firstName || !lastName) {
-      return res.status(400).json({ message: "Name required" });
-    }
-
-    if (!email) {
-      return res.status(400).json({ message: "Email required" });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Valid email required" });
-    }
-    if (!password || password.length < 6) {
-      return res.status(400).json({
-        message: "Password must be at least 6 characters"
-      });
-    }
-
-    const existing = await pool.query(
-      "SELECT id FROM users WHERE email=$1",
-      [email]
-    );
-
-    if (existing.rows.length > 0) {
-      return res.status(400).json({
-        message: "Email already registered"
-      });
-    }
-
-
-  if (!Array.isArray(faceEmbedding) || faceEmbedding.length !== 128) {
-  return res.status(400).json({
-    message: "Invalid face embedding length"
-  });
-}
-
-const isValid = faceEmbedding.every(
-  (v) => typeof v === "number" && Number.isFinite(v)
-);
-
-if (!isValid) {
-  return res.status(400).json({
-    message: "Invalid embedding values"
-  });
-}
-
-const embedding = faceEmbedding;
-const magnitude = Math.sqrt(
-  faceEmbedding.reduce((sum, v) => sum + v * v, 0)
-);
-
-if (magnitude < 0.9 || magnitude > 1.1) {
-  return res.status(400).json({
-    message: "Invalid embedding normalization"
-  });
-}
-
-    // 🔐 PASSWORD HASH
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 💾 SAVE IN DB
-    await pool.query(
-      `INSERT INTO users
-(password,role,firstname,lastname,email,phone,address,face_embedding)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [
-        hashedPassword,
-        role,
-        firstName,
-        lastName,
-        email,
-        phone,
-        address,
-        embedding
-      ]
-    );
-
-    res.json({ message: "User registered with face ✅" });
-
-  } catch (err) {
-    console.error("FACE REGISTER ERROR:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 app.post("/api/applications", async (req, res) => {
   try {
     const {
@@ -2009,6 +1867,177 @@ app.post("/api/attendance", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+
+
+
+
+
+
+
+
+// face system yha se chaluuuu h    
+
+
+
+
+
+
+app.post("/api/register", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const {
+      password,
+      role,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address
+    } = req.body;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Valid email required" });
+    }
+    if (!firstName || !lastName) {
+      return res.status(400).json({ message: "Name required" });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" })
+    }
+    const existing = await pool.query(
+      "SELECT * FROM users WHERE email=$1",
+      [email]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      `INSERT INTO users
+(password,role,firstname,lastname,email,phone,address)
+VALUES($1,$2,$3,$4,$5,$6,$7)`,
+      [
+        hashedPassword,
+        role,
+        firstName,
+        lastName,
+        email,
+        phone,
+        address
+      ]
+    );
+    res.json({ message: "User Registered Successfully" });
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: "Server Error" })
+  }
+});
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+app.post("/api/register-with-face", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+
+const {
+  firstName,
+  lastName,
+  email,
+  phone,
+  address,
+  password,
+  role,
+  faceEmbedding
+} = req.body;
+
+    // ✅ VALIDATION
+    if (!firstName || !lastName) {
+      return res.status(400).json({ message: "Name required" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Valid email required" });
+    }
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters"
+      });
+    }
+
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        message: "Email already registered"
+      });
+    }
+
+
+  if (!Array.isArray(faceEmbedding) || faceEmbedding.length !== 128) {
+  return res.status(400).json({
+    message: "Invalid face embedding length"
+  });
+}
+
+const isValid = faceEmbedding.every(
+  (v) => typeof v === "number" && Number.isFinite(v)
+);
+
+if (!isValid) {
+  return res.status(400).json({
+    message: "Invalid embedding values"
+  });
+}
+
+const embedding = faceEmbedding;
+const magnitude = Math.sqrt(
+  faceEmbedding.reduce((sum, v) => sum + v * v, 0)
+);
+
+if (magnitude < 0.9 || magnitude > 1.1) {
+  return res.status(400).json({
+    message: "Invalid embedding normalization"
+  });
+}
+
+    // 🔐 PASSWORD HASH
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 💾 SAVE IN DB
+    await pool.query(
+      `INSERT INTO users
+(password,role,firstname,lastname,email,phone,address,face_embedding)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [
+        hashedPassword,
+        role,
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        embedding
+      ]
+    );
+
+    res.json({ message: "User registered with face ✅" });
+
+  } catch (err) {
+    console.error("FACE REGISTER ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 app.post("/api/self-attendance-face", authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== "staff") {
