@@ -2051,15 +2051,16 @@ app.post("/api/self-attendance-face", authenticateToken, async (req, res) => {
       return res.status(400).json({ message: "Invalid embedding" });
     }
 
-    // ✅ LOCATION CHECK
-    if (!accuracy || accuracy > 150) {
-      return res.status(400).json({ message: "Location not accurate" });
-    }
-
-    const distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
-    if (distance > ALLOWED_RADIUS) {
-      return res.status(400).json({ message: "Not at office location" });
-    }
+    // // ✅ LOCATION CHECK
+    // if (!accuracy || accuracy > 150) {
+    //   return res.status(400).json({ message: "Location not accurate" });
+    // }
+// 🔥 LOCATION CHECK DISABLED (TEST MODE)
+console.log("LOCATION DEBUG:", { lat, lng, accuracy });
+    // const distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+    // if (distance > ALLOWED_RADIUS) {
+    //   return res.status(400).json({ message: "Not at office location" });
+    // }
 
     // ✅ TIME CHECK
     if (!isTimeAllowed(slot)) {
