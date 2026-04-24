@@ -96,12 +96,15 @@ scoreThreshold: 0.4,
       .withFaceLandmarks();
 
 if (detections.length === 0) {
-  setStatus((prev) => {
-  if (prev !== "No face detected ❌") {
-    return "No face detected ❌";
-  }
-  return prev;
-});
+  setStatus("Face lost ❌ Come back to center");
+
+  // 🔥 RESET FLOW
+  stepsRef.current = {
+    center: false,
+    left: false,
+    right: false,
+  };
+
   return;
 }
 
@@ -116,7 +119,9 @@ if (detections.length > 1) {
 
     const detection = detections[0];
     if (!detection) return;
-
+if (!steps.center) {
+  setStatus("Look straight");
+}
     const nose = detection.landmarks.getNose();
 if (!nose || nose.length < 4) return;
 
@@ -129,13 +134,13 @@ const adjustedRatio = 1 - ratio;
 // CENTER
 if (!steps.center && adjustedRatio > 0.4 && adjustedRatio < 0.6) {
   steps.center = true;
-  setStatus("Now move LEFT");
+  setStatus("Move slightly LEFT ");
 }
 
 // LEFT
 else if (!steps.left && steps.center && adjustedRatio < 0.38) {
   steps.left = true;
-  setStatus("Now move RIGHT");
+  setStatus("Move slightly RIGHT ");
 }
 
 // RIGHT
