@@ -252,7 +252,6 @@ if (detection.descriptor && detection.detection.score > 0.85) {
     alert("Face not clear. Try again.");
     return;
   }
-
   // ✅ AVERAGE
   const avg = new Array(128).fill(0);
   tempEmbeddings.forEach((emb) => {
