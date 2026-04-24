@@ -81,15 +81,27 @@ const steps = stepsRef.current;
   setStatus("Look straight");
 
   intervalRef.current = setInterval(async () => {
-    if (!videoRef.current || videoRef.current.readyState !== 4) {
+if (
+  !videoRef.current ||
+  videoRef.current.readyState !== 4 ||
+  videoRef.current.videoWidth === 0
+) {
   return;
 }
     const detections = await faceapi
-      .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+      .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({
+  inputSize: 416,
+scoreThreshold: 0.4,
+}))
       .withFaceLandmarks();
 
 if (detections.length === 0) {
-  setStatus("No face detected ❌");
+  setStatus((prev) => {
+  if (prev !== "No face detected ❌") {
+    return "No face detected ❌";
+  }
+  return prev;
+});
   return;
 }
 
@@ -106,25 +118,27 @@ if (detections.length > 1) {
     if (!detection) return;
 
     const nose = detection.landmarks.getNose();
-    const noseX = nose[3].x;
+if (!nose || nose.length < 4) return;
+
+const noseX = nose[3].x;
     const faceWidth = videoRef.current.videoWidth;
 
     const ratio = noseX / faceWidth;
 
 // CENTER
-if (!steps.center && ratio > 0.45 && ratio < 0.55) {
+if (!steps.center && ratio > 0.4 && ratio < 0.6) {
   steps.center = true;
   setStatus("Now move LEFT");
 }
 
 // LEFT
-else if (!steps.left && steps.center && ratio < 0.35) {
+else if (!steps.left && steps.center && ratio < 0.38) {
   steps.left = true;
   setStatus("Now move RIGHT");
 }
 
 // RIGHT
-else if (!steps.right && steps.left && ratio > 0.65) {
+else if (!steps.right && steps.left && ratio > 0.62) {
   steps.right = true;
 }
 
@@ -155,11 +169,18 @@ const capture = async () => {
   let tempEmbeddings = [];
 
   for (let i = 0; i < 5; i++) {
-      if (!videoRef.current || videoRef.current.readyState !== 4) continue;
+      if (
+  !videoRef.current ||
+  videoRef.current.readyState !== 4 ||
+  videoRef.current.videoWidth === 0
+) continue;
     const detections = await faceapi
       .detectAllFaces(
         videoRef.current,
-        new faceapi.TinyFaceDetectorOptions()
+        new faceapi.TinyFaceDetectorOptions({
+  inputSize: 416,
+scoreThreshold: 0.4,
+})
       )
       .withFaceLandmarks()
       .withFaceDescriptor();
@@ -257,7 +278,6 @@ stepsRef.current = {
 };
 if (videoRef.current?.srcObject) {
   const tracks = videoRef.current.srcObject.getTracks();
-  tracks.forEach((track) => track.stop());
 }
 };
 
@@ -268,7 +288,9 @@ if (videoRef.current?.srcObject) {
       <div>
   Follow the instruction shown below 👇
 </div>
-<div>Status: {status}</div>
+<div style={{ fontWeight: "bold", color: "#333" }}>
+  Status: {status}
+</div>
       <button type="button" onClick={detectHeadMovement}>
   Verify Face Movement
 </button>
