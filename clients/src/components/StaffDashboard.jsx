@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
+import FaceVerify from "./FaceVerify";
 function StaffDashboard() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
@@ -9,7 +10,8 @@ function StaffDashboard() {
   const [loading, setLoading] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-
+const [showFace, setShowFace] = useState(false);
+const [pendingSlot, setPendingSlot] = useState(null);
   const fetchToday = async () => {
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -143,6 +145,51 @@ setLoading(false);
     localStorage.clear();
     window.location.href = "/login";
   };
+const markAttendanceWithFace = async (slot, embedding) => {
+  try {
+    setLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(`${API}/api/self-attendance-face`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              slot,
+              embedding,
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            })
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            alert(result.message);
+          } else {
+            alert(result.message);
+            fetchToday();
+          }
+        } catch {
+          alert("Network error");
+        }
+        setLoading(false);
+      },
+      () => {
+        alert("Location permission required");
+        setLoading(false);
+      }
+    );
+  } catch {
+    alert("Error");
+    setLoading(false);
+  }
+};
   return (
     <div
       style={{
@@ -206,7 +253,10 @@ setLoading(false);
  <button
   style={primaryBtn}
   disabled={todayAttendance?.morning || !isAllowed("morning")}
-  onClick={() => markAttendance("morning")}
+  onClick={() => {
+    setPendingSlot("morning");
+    setShowFace(true);
+  }}
 >
   🌅 Morning (7 - 8:30)
 </button>
@@ -215,7 +265,10 @@ setLoading(false);
 <button
   style={primaryBtn}
   disabled={todayAttendance?.afternoon || !isAllowed("afternoon")}
-  onClick={() => markAttendance("afternoon")}
+  onClick={() => {
+    setPendingSlot("afternoon");
+    setShowFace(true);
+  }}
 >
   🌞 Afternoon (1 - 2:30)
 </button>
@@ -224,12 +277,23 @@ setLoading(false);
 <button
   style={primaryBtn}
   disabled={todayAttendance?.night || !isAllowed("night")}
-  onClick={() => markAttendance("night")}
+  onClick={() => {
+    setPendingSlot("night");
+    setShowFace(true);
+  }}
 >
   🌙 Night (7 - 8:30)
 </button>
 {!isAllowed("night") && <p style={{ color: "red" }}>⛔ Time over</p>}
 </div>
+{showFace && (
+  <FaceVerify
+    onVerify={(embedding) => {
+      markAttendanceWithFace(pendingSlot, embedding);
+      setShowFace(false);
+    }}
+  />
+)}
       <div
         style={{
           marginTop: "20px",

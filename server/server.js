@@ -22,6 +22,19 @@ const client = SibApiV3Sdk.ApiClient.instance;
 const OFFICE_LAT = 22.183757;  // apna exact dalna
 const OFFICE_LNG = 74.843436;
 const ALLOWED_RADIUS = 200; // meters
+function cosineSimilarity(a, b) {
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3; // meters
   const toRad = (x) => (x * Math.PI) / 180;
@@ -1996,6 +2009,98 @@ app.post("/api/attendance", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+app.post("/api/self-attendance-face", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== "staff") {
+      return res.status(403).json({ message: "Staff only" });
+    }
+
+    const { slot, embedding, lat, lng, accuracy } = req.body;
+
+    // ✅ BASIC VALIDATION
+    if (!embedding || embedding.length !== 128) {
+      return res.status(400).json({ message: "Invalid embedding" });
+    }
+
+    // ✅ LOCATION CHECK
+    if (!accuracy || accuracy > 50) {
+      return res.status(400).json({ message: "Location not accurate" });
+    }
+
+    const distance = getDistance(lat, lng, OFFICE_LAT, OFFICE_LNG);
+    if (distance > ALLOWED_RADIUS) {
+      return res.status(400).json({ message: "Not at office location" });
+    }
+
+    // ✅ TIME CHECK
+    if (!isTimeAllowed(slot)) {
+      return res.status(400).json({ message: "Time not allowed" });
+    }
+
+    // 🔥 GET STORED EMBEDDING
+    const user = await pool.query(
+      "SELECT face_embedding FROM users WHERE id=$1",
+      [req.user.id]
+    );
+
+    const stored = user.rows[0]?.face_embedding;
+
+    if (!stored) {
+      return res.status(400).json({ message: "No face registered" });
+    }
+
+    // 🔥 MATCH
+    const similarity = cosineSimilarity(embedding, stored);
+
+    console.log("SIMILARITY:", similarity);
+
+    if (similarity < 0.5) {
+      return res.status(401).json({
+        message: "Face not matched ❌"
+      });
+    }
+
+    // ✅ ATTENDANCE LOGIC (same as before)
+    const today = new Date().toLocaleDateString("en-CA");
+
+    const existing = await pool.query(
+      "SELECT * FROM attendance WHERE user_id=$1 AND date=$2",
+      [req.user.id, today]
+    );
+
+    if (existing.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO attendance(user_id,date,morning,afternoon,night,status)
+         VALUES($1,$2,$3,$4,$5,$6)`,
+        [
+          req.user.id,
+          today,
+          slot === "morning",
+          slot === "afternoon",
+          slot === "night",
+          "present"
+        ]
+      );
+    } else {
+      if (existing.rows[0][slot]) {
+        return res.status(400).json({
+          message: "Already marked"
+        });
+      }
+
+      await pool.query(
+        `UPDATE attendance SET ${slot}=true WHERE user_id=$1 AND date=$2`,
+        [req.user.id, today]
+      );
+    }
+
+    res.json({ message: "Attendance marked with face ✅" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 app.post("/api/self-attendance", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
