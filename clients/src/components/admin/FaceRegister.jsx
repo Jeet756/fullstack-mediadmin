@@ -269,9 +269,7 @@ if (detection.descriptor && detection.detection.score > 0.85) {
   const finalEmbedding = avg.map((v) => v / norm);
 console.log("FINAL EMBEDDING:", finalEmbedding);
 console.log("LENGTH:", finalEmbedding.length);
-  onCapture({
-    embedding: finalEmbedding,
-  });
+ onCapture(finalEmbedding);
 
   setVerified(false);
   clearInterval(intervalRef.current);

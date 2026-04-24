@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
-import FaceVerify from "./FaceVerify";
+import FaceRegister from "../components/admin/FaceRegister";
 function StaffDashboard() {
   const API = "https://fullstack-mediadmin.onrender.com";
   const token = localStorage.getItem("token");
@@ -286,8 +286,8 @@ const markAttendanceWithFace = async (slot, embedding) => {
 {!isAllowed("night") && <p style={{ color: "red" }}>⛔ Time over</p>}
 </div>
 {showFace && (
-  <FaceVerify
-    onVerify={(embedding) => {
+  <FaceRegister
+    onCapture={(embedding) => {
       markAttendanceWithFace(pendingSlot, embedding);
       setShowFace(false);
     }}
