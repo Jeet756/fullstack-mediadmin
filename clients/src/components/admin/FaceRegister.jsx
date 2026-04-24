@@ -280,7 +280,6 @@ if (videoRef.current?.srcObject) {
   const tracks = videoRef.current.srcObject.getTracks();
 }
 };
-
   return (
     <div>
       <video ref={videoRef} autoPlay muted playsInline width="300" />
