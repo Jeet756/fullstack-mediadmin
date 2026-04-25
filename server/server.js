@@ -23,15 +23,27 @@ const OFFICE_LAT = 22.183757;  // apna exact dalna
 const OFFICE_LNG = 74.843436;
 const ALLOWED_RADIUS = 200; // meters
 function cosineSimilarity(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b)) return 0;
+  if (a.length !== b.length) return 0;
+
   let dot = 0;
   let magA = 0;
   let magB = 0;
 
   for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    magA += a[i] * a[i];
-    magB += b[i] * b[i];
+    const valA = Number(a[i]);
+    const valB = Number(b[i]);
+
+    if (!Number.isFinite(valA) || !Number.isFinite(valB)) {
+      return 0; // 🔥 invalid value safe exit
+    }
+
+    dot += valA * valB;
+    magA += valA * valA;
+    magB += valB * valB;
   }
+
+  if (magA === 0 || magB === 0) return 0;
 
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
@@ -2122,15 +2134,43 @@ console.log("LOCATION DEBUG:", { lat, lng, accuracy });
       [req.user.id]
     );
 
-    const stored = user.rows[0]?.face_embedding;
+    let stored = user.rows[0]?.face_embedding;
+
+// ✅ convert string array → number array
+if (Array.isArray(stored)) {
+  stored = stored.map(Number);
+}
+
+if (typeof stored === "string") {
+  stored = stored
+    .replace(/[{}"]/g, "")   // 🔥 FIX (quotes bhi remove)
+    .split(",")
+    .map(v => Number(v.trim()));
+}
+if (stored.some(v => !Number.isFinite(v))) {
+  return res.status(400).json({
+    message: "Stored embedding corrupted"
+  });
+}
 
     if (!stored) {
       return res.status(400).json({ message: "No face registered" });
     }
+if (!Array.isArray(embedding) || embedding.length !== 128) {
+  return res.status(400).json({ message: "Invalid embedding" });
+}
 
+if (!Array.isArray(stored) || stored.length !== 128) {
+  return res.status(400).json({ message: "Stored embedding invalid" });
+}
     // 🔥 MATCH
 const similarity = cosineSimilarity(embedding, stored);
-
+if (!Number.isFinite(similarity)) {
+  console.log("❌ INVALID SIMILARITY:", similarity);
+  return res.status(400).json({
+    message: "Face comparison failed ❌"
+  });
+}
 console.log("SIMILARITY:", similarity);
 
 // 🔒 STRICT SECURITY
