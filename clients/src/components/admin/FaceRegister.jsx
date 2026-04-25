@@ -77,7 +77,8 @@ if (intervalRef.current) {
   }
 
 const steps = stepsRef.current;
-
+// ✅ YAHAN DAAL (interval ke bahar)
+let missCount = 0;
   setStatus("Look straight");
 
   intervalRef.current = setInterval(async () => {
@@ -91,21 +92,27 @@ if (
     const detections = await faceapi
       .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({
   inputSize: 416,
-scoreThreshold: 0.4,
+scoreThreshold: 0.25,
 }))
       .withFaceLandmarks();
 
+// 🔥 REPLACE detection check
 if (detections.length === 0) {
-  setStatus("Face lost ❌ Come back to center and verify face movement again");
+  missCount++;
 
-  // 🔥 RESET FLOW
-  stepsRef.current = {
-    center: false,
-    left: false,
-    right: false,
-  };
+  if (missCount > 5) {
+    setStatus("Face lost ❌ Come back to center and verify face movement again");
+
+    stepsRef.current = {
+      center: false,
+      left: false,
+      right: false,
+    };
+  }
 
   return;
+} else {
+  missCount = 0;
 }
 
 if (detections.length > 1) {
@@ -138,13 +145,13 @@ if (!steps.center && adjustedRatio > 0.4 && adjustedRatio < 0.6) {
 }
 
 // LEFT
-else if (!steps.left && steps.center && adjustedRatio < 0.38) {
+else if (!steps.left && steps.center && adjustedRatio < 0.35) {
   steps.left = true;
   setStatus("Move slightly RIGHT ");
 }
 
 // RIGHT
-else if (!steps.right && steps.left && adjustedRatio > 0.62) {
+else if (!steps.right && steps.left && adjustedRatio > 0.65) {
   steps.right = true;
 }
 
@@ -185,7 +192,7 @@ const capture = async () => {
     videoRef.current,
     new faceapi.TinyFaceDetectorOptions({
       inputSize: 416,
-      scoreThreshold: 0.4,
+      scoreThreshold: 0.3,
     })
   )
   .withFaceLandmarks()
@@ -224,7 +231,7 @@ if (!detection.detection) {
     const ratio = faceArea / videoArea;
 
     // ❌ too far
-    if (ratio < 0.1) {
+  if (ratio < 0.07) {
       setStatus("Face too far ❌");
       continue;
     }
@@ -235,20 +242,20 @@ if (!detection.detection) {
 
     if (
       Math.abs(centerX - videoCenter) >
-      videoRef.current.videoWidth * 0.2
+      videoRef.current.videoWidth * 0.3
     ) {
       setStatus("Center your face ❌");
       continue;
     }
 
-if (detection.descriptor && detection.detection.score > 0.85) {
+if (detection.descriptor && detection.detection.score > 0.75) {
   tempEmbeddings.push(Array.from(detection.descriptor));
 }
 
     await new Promise((res) => setTimeout(res, 400));
   }
 
-  if (tempEmbeddings.length < 3) {
+  if (tempEmbeddings.length < 2) {
     alert("Face not clear. Try again.");
     return;
   }

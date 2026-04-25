@@ -124,8 +124,8 @@ function Register() {
           </select>
           <div>FACE COMPONENT BELOW 👇</div>
           <FaceRegister
-  onCapture={(data) => {
-    setFaceEmbedding(data.embedding);
+  onCapture={(embedding) => {
+    setFaceEmbedding(embedding);
   }}
 />
             <div>FACE COMPONENT ABOVE 👆</div>
