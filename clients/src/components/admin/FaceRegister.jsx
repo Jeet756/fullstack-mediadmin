@@ -180,22 +180,26 @@ const capture = async () => {
     return;
   }
 
-  if (!verified) {
-    alert("Verify face movement first");
-    return;
-  }
+if (!verified) {
+  alert("Verify face movement first");
+  return;
+}
+
 if (!videoRef.current?.srcObject) {
-    await startCamera(); // 🔥 ADD THIS
-    await new Promise(res => setTimeout(res, 500)); // thoda wait
-  }
+  await startCamera();
+}
+
+setStatus("Stabilizing camera...");
+await new Promise(res => setTimeout(res, 600)); // 🔥 ADD THIS
 
   setStatus("Capturing multiple samples...");
 
-  let tempEmbeddings = [];
+let tempEmbeddings = [];
 
- let attempts = 0;
+let attempts = 0;
+let validFrames = 0;
 
-for (let i = 0; i < 5 && attempts < 12; i++) {
+for (let i = 0; i < 10 && validFrames < 5; i++) {
   attempts++;
       if (
   !videoRef.current ||
@@ -213,9 +217,8 @@ for (let i = 0; i < 5 && attempts < 12; i++) {
   .withFaceLandmarks()
   .withFaceDescriptors();  // ✅ correct
 
-  if (detections.length === 0) {
-  setStatus("No face detected ❌");
-  continue;
+if (detections.length === 0) {
+  continue; // 🔥 silent ignore
 }
 
 // pick largest face
@@ -265,6 +268,7 @@ if (!detection.detection) {
 
 if (detection.descriptor && detection.detection.score > 0.75) {
   tempEmbeddings.push(Array.from(detection.descriptor));
+  validFrames++; // 🔥 ADD THIS
 }
 
     await new Promise((res) => setTimeout(res, 400));
