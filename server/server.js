@@ -2178,7 +2178,7 @@ const maxSim = Math.max(...similarities);
 console.log("SIMILARITIES:", similarities);
 console.log("MAX SIMILARITY:", maxSim);
 
-if (maxSim < 0.97) {
+if (maxSim < 0.98) {
   return res.status(401).json({
     message: "Face not matched ❌"
   });
