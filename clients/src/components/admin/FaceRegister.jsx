@@ -12,16 +12,17 @@ const stepsRef = useRef({
   left: false,
   right: false,
 });
-  useEffect(() => {
-  startCamera();
+useEffect(() => {
   loadModels();
 
-return () => {
-  stopCamera();
-};
+  return () => {
+    stopCamera();
+  };
 }, []);
 
-  const startCamera = async () => {
+const startCamera = async () => {
+  if (videoRef.current?.srcObject) return; // 🔥 ADD THIS
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true
@@ -29,8 +30,8 @@ return () => {
 
     videoRef.current.srcObject = stream;
     videoRef.current.onloadedmetadata = () => {
-  videoRef.current.play();
-};
+      videoRef.current.play();
+    };
   } catch (err) {
     alert("Camera permission denied");
     console.error(err);
@@ -60,9 +61,11 @@ const loadModels = async () => {
   }
 };
 
-const detectHeadMovement = () => {
+const detectHeadMovement = async () => {
+  setVerified(false); // 🔥 add
   if (!videoRef.current?.srcObject) {
-  startCamera();
+  await startCamera(); // 🔥 FIX
+  await new Promise(res => setTimeout(res, 300)); // warmup
 }
   // reset steps
 stepsRef.current = {
@@ -165,8 +168,7 @@ else if (!steps.right && steps.left && adjustedRatio > 0.65) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
       setVerified(true);
-      setStatus("Liveness verified ✅");
-      stopCamera(); // 🔥 add this
+      setStatus("Liveness verified ✅ Now click Capture");
     }
 
   }, 300);
@@ -182,12 +184,19 @@ const capture = async () => {
     alert("Verify face movement first");
     return;
   }
+if (!videoRef.current?.srcObject) {
+    await startCamera(); // 🔥 ADD THIS
+    await new Promise(res => setTimeout(res, 500)); // thoda wait
+  }
 
   setStatus("Capturing multiple samples...");
 
   let tempEmbeddings = [];
 
-  for (let i = 0; i < 5; i++) {
+ let attempts = 0;
+
+for (let i = 0; i < 5 && attempts < 12; i++) {
+  attempts++;
       if (
   !videoRef.current ||
   videoRef.current.readyState !== 4 ||
@@ -262,9 +271,10 @@ if (detection.descriptor && detection.detection.score > 0.75) {
   }
 
   if (tempEmbeddings.length < 2) {
-    alert("Face not clear. Try again.");
-    return;
-  }
+  alert("Face not clear. Try again.");
+  stopCamera(); // 🔥 ADD THIS
+  return;
+}
   // ✅ AVERAGE
   const avg = new Array(128).fill(0);
   tempEmbeddings.forEach((emb) => {
