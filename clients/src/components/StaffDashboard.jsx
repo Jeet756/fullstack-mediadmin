@@ -10,6 +10,7 @@ function StaffDashboard() {
   const [loading, setLoading] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
 const [showFace, setShowFace] = useState(false);
 const [pendingSlot, setPendingSlot] = useState(null);
   const fetchToday = async () => {
@@ -22,6 +23,33 @@ const [pendingSlot, setPendingSlot] = useState(null);
 setTodayAttendance(data[0] || {});
     } catch {}
   };
+useEffect(() => {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const location = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      };
+
+      console.log("LOCATION STORED:", location);
+      setUserLocation(location);
+    },
+    () => {
+      alert("Location permission required");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    }
+  );
+}, []);
 useEffect(() => {
   fetchToday();
 }, []);
@@ -72,56 +100,51 @@ useEffect(() => {
 // };
 
 const isAllowed = () => true; // 🔥 TEST MODE
- const markAttendance = async (slot) => {
+const markAttendance = async (slot) => {
   try {
     setLoading(true);
 
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
+    if (!userLocation) {
+      alert("Location not ready, try again");
+      setLoading(false);
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-const lng = position.coords.longitude;
-const accuracy = position.coords.accuracy;
+    const { lat, lng, accuracy } = userLocation;
 
-        const res = await fetch(`${API}/api/self-attendance`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ slot, lat, lng, accuracy })
-        });
-
-        const result = await res.json();
-
-        if (!res.ok) {
-  alert(result.message || "Failed");
-  setLoading(false);
-  return;
-}
-
-        alert(result.message);
-        await fetchToday();
-setLoading(false);
-        const today = new Date().toISOString().split("T")[0];
-        await fetchData(today, today);
-
-        setTodayAttendance(prev => ({
-          ...(prev || {}),
-          [slot]: true
-        }));
+    const res = await fetch(`${API}/api/self-attendance`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      (error) => {
-  alert("Location permission required");
-  setLoading(false);
-}
-    );
+      body: JSON.stringify({ slot, lat, lng, accuracy }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message || "Failed");
+      setLoading(false);
+      return;
+    }
+
+    alert(result.message);
+
+    await fetchToday();
+
+    const today = new Date().toISOString().split("T")[0];
+    await fetchData(today, today);
+
+    setTodayAttendance((prev) => ({
+      ...(prev || {}),
+      [slot]: true,
+    }));
+
+    setLoading(false);
   } catch {
     alert("Error");
+    setLoading(false);
   }
 };
   const downloadExcel = () => {
@@ -147,42 +170,39 @@ const markAttendanceWithFace = async (slot, embedding) => {
   try {
     setLoading(true);
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(`${API}/api/self-attendance-face`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              slot,
-              embedding,
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy
-            })
-          });
+    if (!userLocation) {
+      alert("Location not ready, try again");
+      setLoading(false);
+      return;
+    }
 
-          const result = await res.json();
+    const { lat, lng, accuracy } = userLocation;
 
-          if (!res.ok) {
-            alert(result.message);
-          } else {
-            alert(result.message);
-            fetchToday();
-          }
-        } catch {
-          alert("Network error");
-        }
-        setLoading(false);
+    const res = await fetch(`${API}/api/self-attendance-face`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      () => {
-        alert("Location permission required");
-        setLoading(false);
-      }
-    );
+      body: JSON.stringify({
+        slot,
+        embedding,
+        lat,
+        lng,
+        accuracy,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message);
+    } else {
+      alert(result.message);
+      fetchToday();
+    }
+
+    setLoading(false);
   } catch {
     alert("Error");
     setLoading(false);

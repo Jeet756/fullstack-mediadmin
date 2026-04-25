@@ -19,9 +19,9 @@ const postersFile = path.join(__dirname, "posters.json");
 const JWT_ISSUER = process.env.JWT_ISSUER || "mediadmin";
 const client = SibApiV3Sdk.ApiClient.instance;
 
-const OFFICE_LAT = 22.183757;  // apna exact dalna
-const OFFICE_LNG = 74.843436;
-const ALLOWED_RADIUS = 200; // meters
+const OFFICE_LAT = 22.7002;
+const OFFICE_LNG = 75.9078;
+const ALLOWED_RADIUS = 200; // 200 meter radius
 function cosineSimilarity(a, b) {
   if (!Array.isArray(a) || !Array.isArray(b)) return 0;
   if (a.length !== b.length) return 0;
