@@ -16,15 +16,8 @@ const stepsRef = useRef({
   startCamera();
   loadModels();
 
- return () => {
-  if (videoRef.current?.srcObject) {
-    const tracks = videoRef.current.srcObject.getTracks();
-    tracks.forEach((track) => track.stop());
-  }
-
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-  }
+return () => {
+  stopCamera();
 };
 }, []);
 
@@ -41,6 +34,18 @@ const stepsRef = useRef({
   } catch (err) {
     alert("Camera permission denied");
     console.error(err);
+  }
+};
+const stopCamera = () => {
+  if (videoRef.current?.srcObject) {
+    const tracks = videoRef.current.srcObject.getTracks();
+    tracks.forEach((track) => track.stop());
+    videoRef.current.srcObject = null;
+  }
+
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
   }
 };
 const loadModels = async () => {
@@ -161,6 +166,7 @@ else if (!steps.right && steps.left && adjustedRatio > 0.65) {
       intervalRef.current = null;
       setVerified(true);
       setStatus("Liveness verified ✅");
+      stopCamera(); // 🔥 add this
     }
 
   }, 300);
@@ -287,9 +293,7 @@ stepsRef.current = {
   left: false,
   right: false,
 };
-if (videoRef.current?.srcObject) {
-  const tracks = videoRef.current.srcObject.getTracks();
-}
+stopCamera(); // 🔥
 };
   return (
     <div>
