@@ -184,7 +184,7 @@ if (!verified) {
   alert("Verify face movement first");
   return;
 }
-
+await new Promise(res => setTimeout(res, 300)); // 🔥 small delay
 if (!videoRef.current?.srcObject) {
   await startCamera();
 }
@@ -310,7 +310,15 @@ stepsRef.current = {
 stopCamera(); // 🔥
 };
   return (
-    <div>
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "300px"
+    }}
+  >
       <video ref={videoRef} autoPlay muted playsInline width="300" />
       <br />
       <div>

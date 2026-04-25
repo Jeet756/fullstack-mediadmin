@@ -5,6 +5,7 @@ import FaceRegister from "../admin/FaceRegister";
 function Register() {
   const [faceEmbedding, setFaceEmbedding] = useState([]);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState({
     firstName: "",
     lastName: "",
@@ -28,6 +29,7 @@ function Register() {
 
   const token = localStorage.getItem("token");
     try {
+      setLoading(true);
       const res = await fetch(
         "https://fullstack-mediadmin.onrender.com/api/register-with-face",
         {
@@ -55,9 +57,11 @@ function Register() {
         password: "",
         role: "",
       });
+      setLoading(false);
     } catch (err) {
       console.error(err);
       alert("Registration failed");
+      setLoading(false);
     }
   };
   return (
@@ -129,7 +133,9 @@ function Register() {
   }}
 />
             <div>FACE COMPONENT ABOVE 👆</div>
-          <button type="submit">Register</button>
+          <button type="submit" disabled={loading}>
+  {loading ? "Registering..." : "Register"}
+</button>
         </form>
       </div>
       <style>{`
