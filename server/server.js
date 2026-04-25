@@ -377,7 +377,22 @@ const authenticateToken = (req, res, next) => {
 
 
 
+
+
+
+
+
+
+
+
 // isse pehle face sytem k liye 
+
+
+
+
+
+
+
 
 
 
@@ -1875,7 +1890,41 @@ app.post("/api/attendance", authenticateToken, async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // face system yha se chaluuuu h    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2084,7 +2133,7 @@ console.log("LOCATION DEBUG:", { lat, lng, accuracy });
 
     console.log("SIMILARITY:", similarity);
 
-    if (similarity < 0.5) {
+   if (similarity < 0.75) {
       return res.status(401).json({
         message: "Face not matched ❌"
       });
