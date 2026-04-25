@@ -51,13 +51,17 @@ const stopCamera = () => {
 };
 const loadModels = async () => {
   try {
+    setStatus("Loading face models...");
+    
     await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
     await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
-    await faceapi.nets.faceRecognitionNet.loadFromUri("/models"); // 🔥 add this
+    await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
+    
     setModelsLoaded(true);
+    setStatus("Models loaded ✅ Click verify");
   } catch (err) {
     console.error("Model load failed", err);
-    alert("Face models failed to load");
+    setStatus("Model load failed ❌");
   }
 };
 
@@ -79,10 +83,17 @@ if (intervalRef.current) {
   clearInterval(intervalRef.current);
   intervalRef.current = null;
 }
-  if (!modelsLoaded) {
-    alert("Models are still loading");
-    return;
-  }
+if (!modelsLoaded) {
+  setStatus("Loading face models...");
+
+  await new Promise((resolve) => {
+    const check = () => {
+      if (modelsLoaded) resolve();
+      else setTimeout(check, 200);
+    };
+    check();
+  });
+}
 
 const steps = stepsRef.current;
 // ✅ YAHAN DAAL (interval ke bahar)
@@ -327,8 +338,12 @@ stopCamera(); // 🔥
 <div style={{ fontWeight: "bold", color: "#333" }}>
   Status: {status}
 </div>
-      <button type="button" onClick={detectHeadMovement}>
-  Verify Face Movement
+<button
+  type="button"
+  onClick={detectHeadMovement}
+  disabled={!modelsLoaded}
+>
+  {modelsLoaded ? "Verify Face Movement" : "Loading models..."}
 </button>
 
 <button type="button" onClick={capture} disabled={!verified}>
