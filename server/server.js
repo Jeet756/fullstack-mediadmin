@@ -2129,15 +2129,16 @@ console.log("LOCATION DEBUG:", { lat, lng, accuracy });
     }
 
     // 🔥 MATCH
-    const similarity = cosineSimilarity(embedding, stored);
+const similarity = cosineSimilarity(embedding, stored);
 
-    console.log("SIMILARITY:", similarity);
+console.log("SIMILARITY:", similarity);
 
-   if (similarity < 0.75) {
-      return res.status(401).json({
-        message: "Face not matched ❌"
-      });
-    }
+// 🔒 STRICT SECURITY
+if (similarity < 0.75) {
+  return res.status(401).json({
+    message: "Face not matched ❌"
+  });
+}
 
     // ✅ ATTENDANCE LOGIC (same as before)
     const today = new Date().toLocaleDateString("en-CA");

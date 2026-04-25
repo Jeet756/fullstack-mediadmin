@@ -199,7 +199,7 @@ let tempEmbeddings = [];
 let attempts = 0;
 let validFrames = 0;
 
-for (let i = 0; i < 10 && validFrames < 5; i++) {
+for (let i = 0; i < 12 && validFrames < 3; i++) {
   attempts++;
       if (
   !videoRef.current ||
@@ -249,7 +249,7 @@ if (!detection.detection) {
     const ratio = faceArea / videoArea;
 
     // ❌ too far
-  if (ratio < 0.07) {
+  if (ratio < 0.04) {
       setStatus("Face too far ❌");
       continue;
     }
@@ -266,7 +266,7 @@ if (!detection.detection) {
       continue;
     }
 
-if (detection.descriptor && detection.detection.score > 0.75) {
+if (detection.descriptor && detection.detection.score > 0.6) {
   tempEmbeddings.push(Array.from(detection.descriptor));
   validFrames++; // 🔥 ADD THIS
 }
