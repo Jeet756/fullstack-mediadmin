@@ -2164,17 +2164,21 @@ if (!Array.isArray(stored) || stored.length !== 128) {
   return res.status(400).json({ message: "Stored embedding invalid" });
 }
     // 🔥 MATCH
-const similarity = cosineSimilarity(embedding, stored);
-if (!Number.isFinite(similarity)) {
-  console.log("❌ INVALID SIMILARITY:", similarity);
-  return res.status(400).json({
-    message: "Face comparison failed ❌"
-  });
-}
-console.log("SIMILARITY:", similarity);
+let similarities = [];
 
-// 🔒 STRICT SECURITY
-if (similarity < 0.75) {
+// agar future me multiple embeddings store karega toh ready hai
+if (Array.isArray(stored[0])) {
+  similarities = stored.map(e => cosineSimilarity(embedding, e));
+} else {
+  similarities = [cosineSimilarity(embedding, stored)];
+}
+
+const maxSim = Math.max(...similarities);
+
+console.log("SIMILARITIES:", similarities);
+console.log("MAX SIMILARITY:", maxSim);
+
+if (maxSim < 0.93) {
   return res.status(401).json({
     message: "Face not matched ❌"
   });
