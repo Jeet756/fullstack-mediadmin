@@ -111,7 +111,7 @@ const handlePrev = () =>
             Compassion • Technology • Excellence
           </p>
           <Link
-  to="/contact"
+  to="/appointment"
   style={{
     display: "inline-block",
     padding: isSmall ? "6px 12px" : "12px 28px",
